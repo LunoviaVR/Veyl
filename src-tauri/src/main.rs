@@ -1,6 +1,6 @@
-// Prevents an additional console window on Windows in release builds.
+// Release builds use the GUI subsystem (no console window).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    veyl_lib::run()
+    pc_health_console_lib::run();
 }

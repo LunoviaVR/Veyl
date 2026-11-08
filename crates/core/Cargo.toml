@@ -1,0 +1,16 @@
+[package]
+name = "pch-core"
+description = "Platform-independent models, calculations, event interpretation, alert and diagnostic rules for PC Health Console"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+roxmltree.workspace = true
+
+[lints]
+workspace = true

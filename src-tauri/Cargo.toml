@@ -1,35 +1,40 @@
 [package]
-name = "veyl"
-version = "0.1.0"
-description = "Task Manager, HWiNFO and frame-time monitor in one window"
-edition = "2021"
-rust-version = "1.82"
+name = "pc-health-console"
+description = "PC Health Console"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
 
 [lib]
-name = "veyl_lib"
+name = "pc_health_console_lib"
 crate-type = ["rlib"]
 
+[[bin]]
+name = "pc-health-console"
+path = "src/main.rs"
+
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2.7", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
-tauri-plugin-single-instance = "2"
-serde = { version = "1", features = ["derive"] }
-parking_lot = "0.12"
-sysinfo = { version = "0.40", default-features = false, features = ["system", "disk", "network", "component"] }
-windows = { version = "0.62", features = [
-    "Win32_Foundation",
-    "Win32_Graphics_Dxgi",
-    "Win32_System_Performance",
-    "Win32_System_Diagnostics_Etw",
-    "Win32_System_Threading",
-    "Win32_UI_WindowsAndMessaging",
-    "Wdk_Graphics_Direct3D",
-] }
+pch-core.workspace = true
+pch-windows.workspace = true
+pch-storage.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+parking_lot.workspace = true
+tauri = { version = "2.12", features = ["tray-icon", "image-png"] }
+tauri-plugin-single-instance = "2.5"
+tauri-plugin-window-state = "2.5"
+tauri-plugin-notification = "2.7"
+tauri-plugin-opener = "2.7"
+tauri-plugin-dialog = "2.8"
+tauri-plugin-updater = "2.14"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tracing-appender = "0.2"
 
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
+[lints]
+workspace = true

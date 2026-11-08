@@ -1,0 +1,146 @@
+@import "tailwindcss";
+@import "uplot/dist/uPlot.min.css";
+
+/* Design tokens. Neutral dark surfaces, one accent, semantic status colours.
+   Light theme overrides the same tokens; components only use the tokens.
+   `static`: emit every token, since charts read them through var() at runtime
+   and Tailwind otherwise drops variables no utility class uses. */
+@theme static {
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", Consolas, monospace;
+
+  --color-bg: #0e1014;
+  --color-panel: #14171d;
+  --color-raised: #1a1e25;
+  --color-hover: #20252d;
+  --color-line: #252a33;
+  --color-line-strong: #323844;
+  --color-fg: #e4e7eb;
+  --color-muted: #8d95a3;
+  --color-faint: #5d6573;
+  --color-accent: #3ecf8e;
+  --color-accent-fg: #06150e;
+  --color-ok: #3ecf8e;
+  --color-info: #5b9cf6;
+  --color-warn: #e0a43a;
+  --color-bad: #ec5f59;
+  --color-crit: #ff6b9a;
+
+  --color-chart-1: #5b9cf6;
+  --color-chart-2: #3ecf8e;
+  --color-chart-3: #e0a43a;
+  --color-chart-4: #c084fc;
+  --color-chart-5: #ec5f59;
+  --color-chart-6: #2dd4bf;
+
+  --radius-sm: 3px;
+  --radius-md: 5px;
+}
+
+:root[data-theme="light"] {
+  --color-bg: #f3f4f6;
+  --color-panel: #ffffff;
+  --color-raised: #f7f8fa;
+  --color-hover: #eef0f3;
+  --color-line: #e2e5ea;
+  --color-line-strong: #cfd4dc;
+  --color-fg: #16191e;
+  --color-muted: #5a6270;
+  --color-faint: #8a92a0;
+  --color-accent: #13995f;
+  --color-accent-fg: #ffffff;
+  --color-ok: #13995f;
+  --color-info: #2f6fd6;
+  --color-warn: #b7791f;
+  --color-bad: #d23f39;
+  --color-crit: #c2185b;
+  --color-chart-1: #2f6fd6;
+  --color-chart-2: #13995f;
+  --color-chart-3: #b7791f;
+  --color-chart-4: #8b5cf6;
+  --color-chart-5: #d23f39;
+  --color-chart-6: #0d9488;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+input,
+textarea,
+select,
+.selectable {
+  user-select: text;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* uPlot theming */
+.uplot,
+.uplot .u-legend {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.uplot .u-legend {
+  text-align: left;
+  padding: 2px 0 0;
+}
+.uplot .u-legend .u-marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.uplot .u-legend th {
+  font-weight: 400;
+}
+.uplot .u-legend td {
+  padding: 0 6px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.overlay-body {
+  background: transparent !important;
+  overflow: hidden;
+}

@@ -1,0 +1,42 @@
+# Builds the Windows installer, signs the updater artifacts and drafts a GitHub release.
+# Trigger: push a tag like v0.2.0 (the version in tauri.conf.json, package.json and
+# Cargo.toml must match). Publish the draft to make the update visible to installed apps.
+#
+# Required repository secrets:
+#   TAURI_SIGNING_PRIVATE_KEY           contents of %USERPROFILE%\.tauri\pc-health-console.key
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password (empty if generated without one)
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: PC Health Console ${{ github.ref_name }}
+          releaseBody: Release notes are in the assets and the commit history.
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+          args: --config {"bundle":{"createUpdaterArtifacts":true}}
