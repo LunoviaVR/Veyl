@@ -1,8 +1,11 @@
 use serde::Serialize;
+use std::sync::Arc;
 use tauri::State;
-use veyl_core::packet::{dissect, Layer};
+
+use veyl_core::packet::{dissect, Layer, LinkType};
 use veyl_core::packet_filter;
-use veyl_core::time::format_iso8601_utc_ms;
+use veyl_core::time::{filetime_to_unix_ms, format_iso8601_utc_ms};
+use veyl_windows::packet_capture::session_losses;
 
 use super::CmdResult;
 use crate::packets::{Capture, PacketRow, PAGE};
@@ -73,6 +76,9 @@ pub struct PacketPage {
     pub running: bool,
     /// Interface the current capture keeps (`None` = all).
     pub interface: Option<u32>,
+    /// Events and buffers Windows dropped because the capture fell behind.
+    pub lost_events: u64,
+    pub lost_buffers: u64,
     pub error: Option<String>,
 }
 
@@ -87,26 +93,48 @@ pub fn get_packets(
         return Err("The filter is too long".into());
     }
     let expr = packet_filter::parse(&filter)?;
-    let s = capture.store.lock();
-    let mut rows = Vec::new();
+    // Copy out what to examine and decode it after releasing the lock: decoding while
+    // holding it stalls the capture thread, and Windows then drops packets.
+    let candidates: Vec<(u64, Arc<[u8]>, LinkType, u32)> = {
+        let s = capture.store.lock();
+        let first = s.packets.front().map_or(0, |p| p.id);
+        let skip = after_id.saturating_sub(first.saturating_sub(1)) as usize;
+        s.packets
+            .iter()
+            .skip(skip)
+            .map(|p| (p.id, p.data.clone(), p.link, p.orig_len))
+            .collect()
+    };
+    let mut ids = Vec::new();
     let mut last_id = after_id;
     let mut more = false;
-    let first = s.packets.front().map_or(0, |p| p.id);
-    let skip = after_id.saturating_sub(first.saturating_sub(1)) as usize;
-    for p in s.packets.iter().skip(skip) {
-        if rows.len() >= PAGE {
+    for (id, data, link, len) in &candidates {
+        if ids.len() >= PAGE {
             more = true;
             break;
         }
-        last_id = p.id;
-        let keep = match &expr {
-            None => true,
-            Some(e) => packet_filter::matches(e, &dissect(&p.data, p.link, p.orig_len as usize)),
-        };
-        if keep {
-            rows.push(s.row(p));
+        last_id = *id;
+        if expr
+            .as_ref()
+            .is_none_or(|e| packet_filter::matches(e, &dissect(data, *link, *len as usize)))
+        {
+            ids.push(*id);
         }
     }
+    let running = capture.is_running();
+    if running {
+        if let Some(l) = session_losses() {
+            *capture.lost.lock() = l;
+        }
+    }
+    let (lost_events, lost_buffers) = *capture.lost.lock();
+    let s = capture.store.lock();
+    let rows = ids
+        .iter()
+        .filter_map(|id| s.get(*id))
+        .map(|p| s.row(p))
+        .collect();
+    let first = s.packets.front().map_or(0, |p| p.id);
     Ok(PacketPage {
         rows,
         last_id,
@@ -114,8 +142,10 @@ pub fn get_packets(
         oldest_id: first,
         total: s.packets.len(),
         evicted: s.evicted,
-        running: capture.is_running(),
+        running,
         interface: s.interface,
+        lost_events,
+        lost_buffers,
         error: capture.error.lock().clone(),
     })
 }
@@ -137,8 +167,7 @@ pub fn get_packet_detail(capture: State<'_, Capture>, id: u64) -> CmdResult<Pack
     let s = capture.store.lock();
     let p = s.get(id).ok_or("This packet is no longer in memory")?;
     let d = dissect(&p.data, p.link, p.orig_len as usize);
-    // FILETIME → Unix ms.
-    let unix_ms = (p.time_100ns - 116_444_736_000_000_000) / 10_000;
+    let unix_ms = filetime_to_unix_ms(p.time_100ns as u64).unwrap_or(0);
     Ok(PacketDetail {
         id,
         time_utc: format_iso8601_utc_ms(unix_ms),
@@ -146,7 +175,7 @@ pub fn get_packet_detail(capture: State<'_, Capture>, id: u64) -> CmdResult<Pack
         if_index: p.if_index,
         outbound: p.outbound,
         layers: d.layers,
-        bytes: p.data.clone(),
+        bytes: p.data.to_vec(),
     })
 }
 

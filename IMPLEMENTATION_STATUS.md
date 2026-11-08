@@ -8,14 +8,14 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 
 | Item | State | Notes |
 |---|---|---|
-| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 155 Rust tests, clippy `-D warnings` clean |
-| React + TS (strict) + Vite + Tailwind 4, Radix primitives, Lucide, uPlot, TanStack Virtual | Done | 16 frontend tests |
+| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 157 Rust tests, clippy `-D warnings` clean |
+| React + TS (strict) + Vite + Tailwind 4, Radix primitives, Lucide, uPlot, TanStack Virtual | Done | 17 frontend tests |
 | Manual QA pass of every page on the release build | Done (2026-11-07) | Unelevated; elevated-only sensors verified separately with `examples/probe.rs` |
 | Settings (validated, atomic save), structured logging (daily rotation, 7 files) | Done | |
 | Single instance, tray icon, close/minimize to tray, window state | Done | Minimize-to-tray verified |
 | Elevated start | Done | Release builds embed `requireAdministrator`; debug builds `asInvoker` |
 | Signed auto-update from GitHub Releases | Done (needs a published repo) | Endpoint `LunoviaVR/Veyl`; key in `%USERPROFILE%\.tauri`; release workflow included |
-| NSIS installer, icon, version info, uninstaller | Done | Per-user install |
+| NSIS installer, icon, version info, uninstaller | Done | Per-machine install (Program Files); the elevated app only runs helper programs from admin-only folders |
 
 ## Monitoring
 

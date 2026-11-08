@@ -18,20 +18,25 @@ export function useQuery<T>(fn: () => Promise<T>, deps: unknown[], opts: { inter
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const inFlight = useRef(false);
+  // Bumped when the inputs change; answers for older inputs are dropped.
+  const gen = useRef(0);
   const fnRef = useRef(fn);
   fnRef.current = fn;
 
   const run = useCallback(() => {
     if (inFlight.current) return;
     inFlight.current = true;
+    const g = gen.current;
     fnRef
       .current()
       .then((d) => {
+        if (g !== gen.current) return;
         setData(d);
         setError(null);
       })
-      .catch((e) => setError(errorText(e)))
+      .catch((e) => g === gen.current && setError(errorText(e)))
       .finally(() => {
+        if (g !== gen.current) return;
         inFlight.current = false;
         setLoading(false);
       });
@@ -39,6 +44,8 @@ export function useQuery<T>(fn: () => Promise<T>, deps: unknown[], opts: { inter
   }, deps);
 
   useEffect(() => {
+    gen.current++;
+    inFlight.current = false; // a request for the old inputs must not block the new one
     setLoading(true);
     run();
     const timer = opts.intervalMs

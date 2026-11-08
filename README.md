@@ -33,10 +33,12 @@ not report is shown as "—" with an explanation, never as 0.
 
 ## Install
 
-Run `Veyl_x.y.z_x64-setup.exe` from the release page. It installs per
-user (no administrator rights needed to install). The application itself starts as
-administrator (Windows shows a UAC prompt), which enables frame capture, kernel dump
-analysis and full process details. Uninstalling removes the program; your data folder
+Run `Veyl_x.y.z_x64-setup.exe` from the release page. It installs for all users into
+Program Files (Windows asks for administrator permission). The application itself
+starts as administrator (Windows shows a UAC prompt), which enables frame capture,
+kernel dump analysis and full process details. Because it runs as administrator, it
+only lives in, and only starts helper programs (PresentMon, cdb) from, folders that
+ordinary programs cannot change: Program Files and the Windows folder. Uninstalling removes the program; your data folder
 (`%LOCALAPPDATA%\app.veyl.monitor`) is kept unless you delete it. Windows crash
 history and crash-dump settings are never modified.
 
@@ -56,7 +58,7 @@ before installation, and are only installed when you click **Install and restart
 
 | Integration | Adds | How |
 |---|---|---|
-| [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Download the console app (`PresentMon-x.y.z-x64.exe`), place it in the tools folder (Settings → Integrations → Tools folder) or select it in Settings |
+| [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Download the console app (`PresentMon-x.y.z-x64.exe`), place it in the tools folder inside Veyl's Program Files folder (Settings → Integrations → Tools folder) or select a copy inside Program Files in Settings |
 | [PawnIO](https://pawnio.eu) (open source, signed) | CPU package/per-core temperatures (Intel), motherboard fans, voltages and temperatures (Nuvoton) | Install PawnIO; runs with the installed (elevated) build. The app ships only PawnIO's official signed LGPL modules, never the driver |
 | Debugging Tools for Windows | Blue-screen dump analysis (`!analyze -v`) | Install "Debugging Tools for Windows" from the Windows SDK installer, or select `cdb.exe` in Settings |
 | Microsoft symbol server | Better stack traces in dump analysis | Off by default; enable in Settings → Integrations. Only symbol files are downloaded; dumps never leave the PC |

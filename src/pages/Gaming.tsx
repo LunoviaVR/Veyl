@@ -258,7 +258,7 @@ export default function Gaming() {
               </p>
               <ol className="list-decimal pl-5 text-muted">
                 <li>Download the PresentMon console application (PresentMon-x.y.z-x64.exe) from github.com/GameTechDev/PresentMon/releases.</li>
-                <li>Place it in the tools folder, or select it in Settings → Integrations.</li>
+                <li>Place it in the tools folder (Windows asks for administrator permission, because it is inside Program Files), or select a copy inside Program Files in Settings → Integrations.</li>
                 <li>Frame capture uses Windows event tracing, which needs administrator rights or membership in the Performance Log Users group.</li>
               </ol>
               <div className="flex gap-2">

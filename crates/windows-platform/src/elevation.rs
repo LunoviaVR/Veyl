@@ -8,7 +8,49 @@ use windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetWindowThreadProcessId, SW_SHOWNORMAL,
 };
 
+use std::path::{Path, PathBuf};
+
 use crate::handle::{wide, OwnedHandle};
+use crate::registry::{read_string, HKEY_LOCAL_MACHINE};
+
+/// Program Files (both) and the Windows folder, read from HKLM because the user
+/// can override the matching environment variables.
+fn admin_only_roots() -> Vec<PathBuf> {
+    let cv = r"SOFTWARE\Microsoft\Windows\CurrentVersion";
+    let mut roots: Vec<PathBuf> = ["ProgramFilesDir", "ProgramFilesDir (x86)"]
+        .iter()
+        .filter_map(|v| read_string(HKEY_LOCAL_MACHINE, cv, v))
+        .map(PathBuf::from)
+        .collect();
+    roots.extend(
+        read_string(
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+            "SystemRoot",
+        )
+        .map(PathBuf::from),
+    );
+    roots
+}
+
+/// True when `p` lies in a folder that only administrators can change.
+// shortcut: a Program Files subfolder whose installer opened it to users still passes; check the ACL if that matters.
+fn in_admin_only_folder(p: &Path) -> bool {
+    let Ok(real) = std::fs::canonicalize(p) else {
+        return false;
+    };
+    admin_only_roots()
+        .iter()
+        .filter_map(|r| std::fs::canonicalize(r).ok())
+        .any(|r| real.starts_with(r))
+}
+
+/// Whether this process may run the program at `p`. Elevated, it only runs programs
+/// from admin-only folders: anywhere else, any program running as the user could
+/// replace the file (or plant a DLL beside it) and gain administrator rights.
+pub fn may_execute(p: &Path) -> bool {
+    !is_elevated() || in_admin_only_folder(p)
+}
 
 /// True when this process runs with an elevated (administrator) token.
 pub fn is_elevated() -> bool {
@@ -68,4 +110,24 @@ pub fn foreground_pid() -> Option<u32> {
     // SAFETY: valid window handle; out-pointer to a local.
     unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
     (pid != 0).then_some(pid)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn admin_only_folders() {
+        assert!(in_admin_only_folder(Path::new(
+            r"C:\Windows\System32\cmd.exe"
+        )));
+        let user_file = std::env::temp_dir().join(format!("veyl-trust-{}.exe", std::process::id()));
+        std::fs::write(&user_file, b"x").expect("write");
+        assert!(
+            !in_admin_only_folder(&user_file),
+            "the user's temp folder is not admin-only"
+        );
+        assert!(!in_admin_only_folder(Path::new(r"C:\nope\missing.exe")));
+        let _ = std::fs::remove_file(&user_file);
+    }
 }

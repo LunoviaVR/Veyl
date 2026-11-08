@@ -125,13 +125,13 @@ pub fn valid_presentmon_path(p: &Path) -> bool {
 pub fn find_presentmon(configured: Option<&str>, tools_dir: &Path) -> Option<PathBuf> {
     if let Some(p) = configured.filter(|p| !p.trim().is_empty()) {
         let p = PathBuf::from(p.trim());
-        return valid_presentmon_path(&p).then_some(p);
+        return (valid_presentmon_path(&p) && crate::elevation::may_execute(&p)).then_some(p);
     }
     let mut found: Vec<PathBuf> = std::fs::read_dir(tools_dir)
         .ok()?
         .flatten()
         .map(|e| e.path())
-        .filter(|p| valid_presentmon_path(p))
+        .filter(|p| valid_presentmon_path(p) && crate::elevation::may_execute(p))
         .collect();
     found.sort();
     found.pop()

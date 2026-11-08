@@ -107,7 +107,7 @@ pub fn list_dumps() -> DumpListing {
 pub fn find_cdb(configured: Option<&str>) -> Option<PathBuf> {
     if let Some(p) = configured.filter(|p| !p.trim().is_empty()) {
         let p = PathBuf::from(p.trim());
-        return valid_cdb_path(&p).then_some(p);
+        return (valid_cdb_path(&p) && crate::elevation::may_execute(&p)).then_some(p);
     }
     let mut candidates = Vec::new();
     for var in ["ProgramFiles(x86)", "ProgramFiles"] {
@@ -115,7 +115,9 @@ pub fn find_cdb(configured: Option<&str>) -> Option<PathBuf> {
             candidates.push(PathBuf::from(base).join(r"Windows Kits\10\Debuggers\x64\cdb.exe"));
         }
     }
-    candidates.into_iter().find(|p| valid_cdb_path(p))
+    candidates
+        .into_iter()
+        .find(|p| valid_cdb_path(p) && crate::elevation::may_execute(p))
 }
 
 /// A configured debugger must be an absolute path to an existing file named cdb.exe.
@@ -274,7 +276,7 @@ pub fn analyze(
     symbol_cache: &Path,
     use_symbol_server: bool,
 ) -> Result<DumpAnalysis, String> {
-    if !valid_cdb_path(cdb) {
+    if !valid_cdb_path(cdb) || !crate::elevation::may_execute(cdb) {
         return Err("The configured debugger is not a valid cdb.exe path.".into());
     }
     if !valid_dump_path(dump) {

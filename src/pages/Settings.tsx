@@ -156,13 +156,13 @@ export default function Settings() {
         </Panel>
 
         <Panel title="Integrations">
-          <Row label="PresentMon executable" hint="Intel PresentMon console application used for frame capture. Leave empty to use the tools folder.">
+          <Row label="PresentMon executable" hint="Intel PresentMon console application used for frame capture. Leave empty to use the tools folder. Must be inside Program Files: Veyl runs it as administrator, so it only runs programs other users and apps cannot replace.">
             <TextInput className="w-[420px] font-mono text-[11.5px]" placeholder="C:\Tools\PresentMon-2.x-x64.exe" value={d.presentmonPath ?? ""} onChange={(e) => set({ presentmonPath: e.target.value || null })} aria-label="PresentMon path" />
             <Button onClick={() => api.openAppFolder("tools")}>
               <FolderOpen className="size-3.5" /> Tools folder
             </Button>
           </Row>
-          <Row label="Debugger (cdb.exe)" hint="From Debugging Tools for Windows (Windows SDK). Leave empty to detect the SDK location.">
+          <Row label="Debugger (cdb.exe)" hint="From Debugging Tools for Windows (Windows SDK). Leave empty to detect the SDK location. Must be inside Program Files, for the same reason.">
             <TextInput className="w-[420px] font-mono text-[11.5px]" placeholder="C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe" value={d.debuggerPath ?? ""} onChange={(e) => set({ debuggerPath: e.target.value || null })} aria-label="Debugger path" />
           </Row>
           <Row

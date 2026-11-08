@@ -327,7 +327,10 @@ impl Settings {
             r.hysteresis = r.hysteresis.abs();
             r.duration_secs = r.duration_secs.min(86_400);
             r.cooldown_secs = r.cooldown_secs.min(7 * 86_400);
-            r.name.truncate(120);
+            // Cut at a character boundary: String::truncate panics inside a multi-byte letter.
+            if let Some((i, _)) = r.name.char_indices().nth(120) {
+                r.name.truncate(i);
+            }
         }
         self
     }
@@ -381,6 +384,13 @@ mod tests {
         assert_eq!(v.overlay.opacity, 1.0);
         assert_eq!(v.overlay.metrics, vec!["fps".to_string()]);
         assert_eq!(v.alert_rules.len(), default_rules().len());
+    }
+
+    #[test]
+    fn long_non_ascii_rule_name_is_cut_without_panicking() {
+        let mut s = Settings::default();
+        s.alert_rules[0].name = "é".repeat(200); // byte 120 falls inside a letter
+        assert_eq!(s.validated().alert_rules[0].name.chars().count(), 120);
     }
 
     #[test]

@@ -726,6 +726,8 @@ export interface PacketPage {
   evicted: number;
   running: boolean;
   interface: number | null;
+  lostEvents: number;
+  lostBuffers: number;
   error: string | null;
 }
 

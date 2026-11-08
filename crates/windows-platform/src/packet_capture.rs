@@ -8,14 +8,16 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use std::thread::JoinHandle;
 
+use crate::handle::wide;
+
 use windows::core::{GUID, PCWSTR, PWSTR};
 use windows::Win32::Foundation::{ERROR_ACCESS_DENIED, ERROR_SUCCESS, WIN32_ERROR};
 use windows::Win32::System::Diagnostics::Etw::{
     CloseTrace, ControlTraceW, EnableTraceEx2, OpenTraceW, ProcessTrace, StartTraceW,
     CONTROLTRACE_HANDLE, EVENT_CONTROL_CODE_ENABLE_PROVIDER, EVENT_RECORD,
-    EVENT_TRACE_CONTROL_STOP, EVENT_TRACE_LOGFILEW, EVENT_TRACE_PROPERTIES,
-    EVENT_TRACE_REAL_TIME_MODE, PROCESS_TRACE_MODE_EVENT_RECORD, PROCESS_TRACE_MODE_REAL_TIME,
-    WNODE_FLAG_TRACED_GUID,
+    EVENT_TRACE_CONTROL_QUERY, EVENT_TRACE_CONTROL_STOP, EVENT_TRACE_LOGFILEW,
+    EVENT_TRACE_PROPERTIES, EVENT_TRACE_REAL_TIME_MODE, PROCESS_TRACE_MODE_EVENT_RECORD,
+    PROCESS_TRACE_MODE_REAL_TIME, WNODE_FLAG_TRACED_GUID,
 };
 
 pub const SESSION_NAME: &str = "Veyl-PacketCapture";
@@ -141,10 +143,6 @@ fn props() -> Box<Props> {
     b
 }
 
-fn wide(s: &str) -> Vec<u16> {
-    s.encode_utf16().chain(std::iter::once(0)).collect()
-}
-
 fn stop_session() -> WIN32_ERROR {
     let name = wide(SESSION_NAME);
     let mut p = props();
@@ -157,6 +155,28 @@ fn stop_session() -> WIN32_ERROR {
             EVENT_TRACE_CONTROL_STOP,
         )
     }
+}
+
+/// Events and real-time buffers Windows dropped in the running session because the
+/// consumer fell behind; `None` when no session is running.
+pub fn session_losses() -> Option<(u64, u64)> {
+    let name = wide(SESSION_NAME);
+    let mut p = props();
+    // SAFETY: properties buffer sized for the session name; the name is NUL-terminated.
+    let rc = unsafe {
+        ControlTraceW(
+            CONTROLTRACE_HANDLE::default(),
+            PCWSTR(name.as_ptr()),
+            &mut p.p,
+            EVENT_TRACE_CONTROL_QUERY,
+        )
+    };
+    (rc == ERROR_SUCCESS).then(|| {
+        (
+            u64::from(p.p.EventsLost),
+            u64::from(p.p.RealTimeBuffersLost),
+        )
+    })
 }
 
 /// Stops a session left behind by a previous run that did not exit cleanly.

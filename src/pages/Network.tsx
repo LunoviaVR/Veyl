@@ -25,7 +25,7 @@ const HEX_LIMIT = 8192;
 
 /** Filter text for "show packets with this value". */
 function fieldFilter(fl: PacketField): string {
-  const v = fl.value.replace(/ \(.*\)$/, "");
+  const v = fl.value.replace(/^(0x[0-9a-f]+|\d+) \(.*\)$/i, "$1");
   return `${fl.key} == ${/^[\w.:/-]+$/.test(v) ? v : `"${v.replace(/"/g, "")}"`}`;
 }
 
@@ -104,7 +104,7 @@ export default function Network() {
   const ifaces = useQuery(() => api.captureInterfaces(), [], { intervalMs: 5000 });
   const [iface, setIface] = useState<string | null>(null); // "" = all interfaces
   const [rows, setRows] = useState<PacketRow[]>([]);
-  const [status, setStatus] = useState<{ total: number; evicted: number; running: boolean; error: string | null } | null>(null);
+  const [status, setStatus] = useState<{ total: number; evicted: number; running: boolean; lost: number; error: string | null } | null>(null);
   // Kept across page switches and restarts, like Wireshark's last filter.
   const [applied, setApplied] = usePref("packetFilter", "");
   const [draft, setDraft] = useState(applied);
@@ -143,7 +143,7 @@ export default function Network() {
         if (g !== gen.current) return;
         after.current = p.lastId;
         more = p.more;
-        setStatus({ total: p.total, evicted: p.evicted, running: p.running, error: p.error });
+        setStatus({ total: p.total, evicted: p.evicted, running: p.running, lost: p.lostEvents + p.lostBuffers, error: p.error });
         // While capturing, the picker shows the interface actually being captured.
         if (p.running) setIface(p.interface == null ? "" : String(p.interface));
         setRows((prev) => {
@@ -277,6 +277,7 @@ export default function Network() {
             {running ? <span className="text-ok">● Capturing</span> : "Stopped"} · {f.num(status?.total ?? 0)} packets
             {applied && ` · ${f.num(rows.length)} match`}
             {!!status?.evicted && ` · ${f.num(status.evicted)} oldest dropped (memory limit)`}
+            {!!status?.lost && <span className="text-warn" title="Windows discarded capture data because the capture could not keep up; some packets are missing."> · packets missed by the capture</span>}
           </span>
         </div>
         {draftError && draft.trim() && <p className="text-[12px] text-bad">{draftError}</p>}

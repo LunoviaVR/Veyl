@@ -22,7 +22,8 @@ pub struct Packet {
     pub outbound: Option<bool>,
     pub link: LinkType,
     pub orig_len: u32,
-    pub data: Vec<u8>,
+    /// Shared so a query can decode it without holding the store lock.
+    pub data: Arc<[u8]>,
     pub src: String,
     pub dst: String,
     pub protocol: String,
@@ -95,7 +96,7 @@ impl Store {
             outbound: raw.outbound,
             link,
             orig_len: raw.orig_len,
-            data: raw.data,
+            data: raw.data.into(),
             src: d.src,
             dst: d.dst,
             protocol: d.protocol,
@@ -140,6 +141,8 @@ pub struct Capture {
     pub store: Arc<Mutex<Store>>,
     pub running: Mutex<Option<PacketCapture>>,
     pub error: Mutex<Option<String>>,
+    /// (events, buffers) Windows dropped during the current capture.
+    pub lost: Mutex<(u64, u64)>,
 }
 
 impl Capture {
@@ -147,6 +150,7 @@ impl Capture {
         self.stop();
         self.store.lock().reset(interface);
         *self.error.lock() = None;
+        *self.lost.lock() = (0, 0);
         let store = self.store.clone();
         let cap = PacketCapture::start(Box::new(move |p| store.lock().push(p)))
             .inspect_err(|e| *self.error.lock() = Some(e.clone()))?;

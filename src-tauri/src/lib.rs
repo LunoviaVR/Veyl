@@ -50,11 +50,16 @@ fn resolve_paths(app: &App) -> Result<Paths, String> {
         db: data.join("history.db"),
         settings: data.join("settings.json"),
         logs: data.join("logs"),
-        tools: data.join("tools"),
+        // Next to the program: per-machine installs put it in Program Files, where only
+        // administrators can add executables for the elevated app to run.
+        tools: std::env::current_exe()
+            .ok()
+            .and_then(|e| e.parent().map(|d| d.join("tools")))
+            .unwrap_or_else(|| data.join("tools")),
         symbols: data.join("symbols"),
         data,
     };
-    for d in [&p.data, &p.logs, &p.tools] {
+    for d in [&p.data, &p.logs] {
         std::fs::create_dir_all(d).map_err(|e| format!("cannot create {}: {e}", d.display()))?;
     }
     Ok(p)
