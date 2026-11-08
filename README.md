@@ -1,131 +1,288 @@
-# Veyl
+# Veyl: Windows PC Health Monitor, Hardware Monitor and Crash Analyzer
 
-A Windows desktop application for monitoring, troubleshooting and understanding PC
-health: live system and process monitoring, hardware sensors, frame-time analysis for
-games, application crash and blue-screen investigation, a stability timeline,
-historical charts and alerts — in one window, using real Windows data only.
+**Veyl is a Windows 11 and Windows 10 system monitor that shows why your PC is slow, hot or unstable.**
+It combines a Task Manager–style process monitor, a hardware sensor monitor (CPU and GPU
+temperatures, fan speeds, voltages, power), an FPS counter with frame-time analysis, a blue screen
+(BSOD) analyzer, an application crash viewer, a network packet capture tool and long-term
+performance history in one window. Every number comes from real Windows data. Nothing is
+estimated, and no telemetry leaves your PC.
 
-> Working name; the product name is set in `src-tauri/tauri.conf.json` (`productName`).
+![Veyl overview dashboard showing CPU, GPU, memory, storage, network and stability at a glance on Windows 11](docs/screenshots/overview.png)
 
-## What it does
+[![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows)](#system-requirements)
+[![Built with Rust and Tauri 2](https://img.shields.io/badge/built%20with-Rust%20%2B%20Tauri%202-B7410E?logo=rust)](ARCHITECTURE.md)
+[![No telemetry](https://img.shields.io/badge/telemetry-none-2EA44F)](#privacy-and-security)
 
-| Area | What you get | Source |
+**[Download the latest release](https://github.com/LunoviaVR/Veyl/releases/latest)** ·
+[Features](#features) · [Install](#download-and-install) · [FAQ](#faq) ·
+[Troubleshooting](#troubleshooting) · [Build from source](#build-from-source)
+
+---
+
+## Why Veyl
+
+Finding the cause of a crash, a stutter or an overheating PC usually means juggling Task
+Manager, a sensor tool, an FPS overlay, Event Viewer, WinDbg and a packet sniffer. Veyl puts
+those views side by side and links them:
+
+- **Evidence, not guesses.** Each crash, blue screen and unexpected restart is shown with the
+  Windows events behind it and the CPU load, temperatures and memory Veyl recorded just before
+  it happened.
+- **Real readings only.** If Windows or a driver does not report a value, Veyl shows "—" and
+  explains why. It never shows a made-up 0.
+- **Nothing installed behind your back.** Veyl installs no drivers, changes no Windows
+  settings, never clears event logs and never deletes crash dumps.
+- **Private by design.** All history stays in a local database. The only network requests are
+  the optional update check and optional debug-symbol downloads.
+- **Light.** About 0.1 % of total CPU while monitoring ([measurements](PERFORMANCE.md)).
+
+## Features
+
+### Real-time system monitor and Task Manager alternative
+
+Live CPU, GPU, memory, disk and network usage, with per-core load and clock speed. The process
+list shows apps with a visible window first, like Task Manager. It also covers CPU, memory,
+commit, disk and network I/O, GPU and video memory per process, plus a process tree, services,
+startup apps and active network connections. You can end a task or a whole process tree and change
+priority, with safeguards that protect critical Windows processes and detect reused process IDs.
+
+![Veyl process list with CPU, memory, I/O, GPU usage, threads and handles per process](docs/screenshots/processes.png)
+
+![Veyl performance view with CPU utilization chart and per-core load and clock speeds](docs/screenshots/performance.png)
+
+### Hardware monitor: CPU temperature, GPU hotspot, fan speeds and voltages
+
+A sensor table with current, minimum, maximum and average values, built on in-house sensor
+providers:
+
+- **CPU:** package and per-core temperatures for Intel CPUs, and package and core power (RAPL).
+- **GPU:** temperature, hotspot, fan speed, clocks, power and VRAM. AMD GPUs use ADLX, NVIDIA
+  GPUs use NVML, and any GPU gets what Windows (WDDM) reports.
+- **Motherboard:** fan speeds, voltages and temperatures on Nuvoton NCT6796–NCT6799 Super I/O
+  chips.
+- **Drives:** NVMe health (SMART), wear and temperature.
+
+CPU and motherboard sensors need the free, signed [PawnIO](https://pawnio.eu) driver, which you
+install yourself.
+
+![Veyl hardware monitor with CPU package and core temperatures, GPU hotspot, fan RPM, voltages and power](docs/screenshots/hardware.png)
+
+### Blue screen (BSOD) analyzer and crash dump analysis
+
+Veyl separates real bugchecks (blue screens with a stop code) from unexpected shutdowns such as
+power loss or a forced power-off. It explains each stop code and lists the minidumps and live
+kernel reports Windows kept. One click runs `!analyze -v` with Microsoft's Debugging Tools to show
+the faulting driver or module. It also shows what your PC was doing in the minutes before the
+crash.
+
+![Veyl blue screen analyzer showing a KERNEL_MODE_HEAP_CORRUPTION bugcheck, its evidence and crash dumps](docs/screenshots/blue-screen-analyzer.png)
+
+### Application crash reports
+
+Every app crash and hang (Application Error 1000, Application Hang 1002) is listed with its
+exception code and meaning, faulting module and version, the linked Windows Error Reporting
+report, related events and the recorded system state. Group by app, module or exception to spot
+repeat offenders.
+
+![Veyl crash reports listing application crashes with exception code, faulting module and Windows Error Reporting details](docs/screenshots/crash-reports.png)
+
+### Stability timeline and diagnostics
+
+A plain-language list of findings, such as "8 crashes faulted in the same DLL" or "Blue screen
+0x13A", each with its evidence. Below it are a daily chart of crashes, shutdowns and hardware
+errors (WHEA) and a searchable timeline of Windows reliability events.
+
+![Veyl stability page with diagnostic findings, a daily event chart and a timeline of Windows reliability events](docs/screenshots/stability.png)
+
+### Network packet capture and protocol analyzer
+
+A Wireshark-style packet capture built on Windows' own built-in capture, with no Npcap or other
+third-party driver to install. It decodes Ethernet, Wi-Fi, ARP, IPv4, IPv6, TCP, UDP, ICMP,
+DNS, mDNS, HTTP, TLS (with the server name), SMB2, QUIC and DHCP layer by layer, with a hex and
+ASCII view. Display filters such as `ip.addr == 192.168.1.10 and tcp.port == 443`,
+`dns.qry.name contains "update"` or `tcp.flags.reset` find specific hosts, ports or errors
+among thousands of packets. Captured packets stay in memory and are never saved or sent.
+
+![Veyl network packet capture showing DNS and ICMP packets, a display filter, protocol layers and a hex dump](docs/screenshots/network.png)
+
+### FPS counter and frame-time analysis for games
+
+Average FPS, 1 % and 0.1 % lows, 95th and 99th percentile frame times, stutter count and frame
+pacing, with CPU and GPU load and temperatures recorded alongside. You can save sessions,
+compare them, export them to CSV and show an optional in-game overlay. It uses Intel PresentMon,
+which reads the timing events Windows already records, so nothing is injected into the game.
+
+### Performance history and CSV export
+
+Telemetry is recorded in 5-second detail (kept 48 hours by default) and 1-minute detail (kept
+30 days). You can chart any range from 15 minutes to 30 days, toggle metrics by category, and
+export to CSV. Periods when Veyl wasn't running are shaded, never filled in.
+
+![Veyl history charts of CPU clock speed, power, temperature and utilization with shaded periods without data](docs/screenshots/history.png)
+
+### PC specs and system information
+
+A complete hardware inventory read from the firmware (SMBIOS) and Windows:
+
+- **System:** manufacturer and Windows version.
+- **CPU:** model, cores and threads, cache sizes and socket.
+- **Motherboard and BIOS:** model and BIOS version.
+- **Memory:** every RAM module with size, type, speed and part number.
+- **Graphics:** GPU and driver version, plus every monitor with its resolution and refresh rate.
+- **Drives and network adapters.**
+
+You can export it as TXT or CSV. Serial numbers and the computer name are left out, so the
+export is safe to post in a support forum.
+
+![Veyl PC specs page with motherboard, BIOS, RAM modules, GPU driver, monitors, drives and network adapters](docs/screenshots/pc-specs.png)
+
+### Alerts and notifications
+
+Threshold alerts for temperatures, memory, disk space, CPU load and thermal throttling, each with
+a trigger delay, hysteresis and cooldown so they don't flap. There are also alerts for a new blue
+screen, an unexpected restart or an app that keeps crashing. Alerts appear as Windows
+notifications, and their history is kept.
+
+## Download and install
+
+1. Download `Veyl_x.y.z_x64-setup.exe` from the
+   [latest release](https://github.com/LunoviaVR/Veyl/releases/latest).
+2. Run it. It installs for all users into Program Files, and Windows asks for administrator
+   permission.
+3. Start **Veyl** from the Start menu. It runs as administrator (Windows shows a UAC prompt)
+   so it can read crash dumps, capture frames and packets, and show full process details.
+
+Closing or minimizing the window keeps Veyl running in the notification area (configurable in
+**Settings → General**); use the tray icon's **Exit** to quit. Updates are checked on GitHub
+Releases, verified against a signature, and installed only when you click **Install and
+restart**. Uninstalling keeps your data folder (`%LOCALAPPDATA%\app.veyl.monitor`) unless
+you delete it.
+
+### System requirements
+
+- Windows 11 x64 (primary target) or Windows 10 x64 21H2 or later.
+- The WebView2 runtime, which is part of Windows 11 and installed automatically on Windows 10.
+- Memory: about 76 MB for the monitoring backend, about 250 MB in total with the window open.
+
+### Optional add-ons
+
+None of these are bundled. Without one, its page explains what is missing and everything else
+keeps working.
+
+| Add-on | What it adds | How to get it |
 |---|---|---|
-| Overview | CPU, GPU, memory, storage, network and stability at a glance | Live telemetry + event history |
-| Processes | Virtualized process table/tree (CPU, memory, I/O, GPU, VRAM, threads, handles), end task / tree with safeguards, priority, properties, file location; services, startup apps, network connections | `NtQuerySystemInformation`, PDH, SCM, registry, IP Helper |
-| Performance | Live charts per device, per-core utilization and clocks | PDH counters |
-| Hardware | Sensor table with min/max/avg, provider status, NVMe SMART/health, drive temperatures, hardware identification | In-house providers: ACPI thermal zones, Windows Energy Meter (CPU RAPL power), AMD ADLX and NVIDIA NVML GPU sensors, WDDM perf data, storage IOCTLs |
-| Gaming | FPS, 1%/0.1% lows, P95/P99 frame times, stutter and pacing, live context, session history, comparison, CSV export, optional overlay | Intel PresentMon (user-installed) |
-| Stability | Diagnostic findings with evidence, daily event chart, unified timeline with "what happened around this time" | Windows Event Log + recorded telemetry |
-| Crash Reports | Application crashes/hangs with exception, faulting module, WER report link, related events, recorded system state | Application Error 1000, Application Hang 1002, WER 1001 |
-| Blue Screen Analyzer | Bugcheck vs. unexpected-shutdown incidents, stop-code reference, dump discovery, `!analyze -v` | WER-SystemErrorReporting 1001, Kernel-Power 41, EventLog 6008, Debugging Tools |
-| History | 5-second and 1-minute telemetry, 15 min – 30 days or custom range, CSV export | Local SQLite |
-| Alerts | Threshold rules with duration, hysteresis, cooldown; BSOD / restart / repeated-crash alerts; Windows notifications | Telemetry + events |
+| [PawnIO](https://pawnio.eu) (open source, Microsoft-signed) | CPU temperatures (Intel); motherboard fans, voltages and temperatures (Nuvoton) | Install PawnIO. Veyl ships only PawnIO's official signed modules, never the driver. |
+| [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Put the console app (`PresentMon-x.y.z-x64.exe`) in the `tools` folder inside Veyl's Program Files folder (**Settings → Integrations → Tools folder**). |
+| Debugging Tools for Windows | Blue screen dump analysis (`!analyze -v`) | Install "Debugging Tools for Windows" from the Windows SDK installer. Veyl finds it automatically. |
+| Microsoft symbol server | Named functions and modules in dump analysis | Off by default. Turn it on in **Settings → Integrations**. Only symbol files are downloaded; dumps never leave your PC. |
 
-Nothing is ever estimated or simulated: a value Windows (or an optional provider) does
-not report is shown as "—" with an explanation, never as 0.
+## Privacy and security
 
-## System requirements
+- **No telemetry, no account, no cloud.** History, settings and logs stay in
+  `%LOCALAPPDATA%\app.veyl.monitor`.
+- **Network requests:** only the update check (can be turned off) and the optional symbol
+  downloads.
+- **Exports** are written only to files you choose, with optional removal of your user name,
+  profile path, computer name, account IDs (SIDs) and drive serial numbers.
+- **Packet captures** stay in memory, are never written to disk, and are cleared when you start a
+  new capture or close Veyl.
+- **No drivers installed.** Packet capture uses Windows' built-in capture, and PawnIO is
+  installed by you.
+- **Administrator rights, safely.** Because Veyl runs as administrator, it only lives in, and
+  only starts helper programs from, folders that ordinary programs can't change (Program Files
+  and Windows). Critical Windows processes can't be ended from Veyl.
 
-- Windows 11 x64 (primary) or Windows 10 x64 21H2+
-- WebView2 runtime (included with Windows 11; installed automatically on Windows 10 if missing)
-- About 80 MB RAM; sampling overhead is shown on the Overview page and in Settings
+## FAQ
 
-## Install
+**How do I check my CPU temperature on Windows 11?**
+Windows does not expose CPU core temperatures to normal apps. Install the free
+[PawnIO](https://pawnio.eu) driver, start Veyl, and open **Hardware**. The CPU package and
+every core's temperature appear there and on the Overview page. Intel CPUs are supported
+today.
 
-Run `Veyl_x.y.z_x64-setup.exe` from the release page. It installs for all users into
-Program Files (Windows asks for administrator permission). The application itself
-starts as administrator (Windows shows a UAC prompt), which enables frame capture,
-kernel dump analysis and full process details. Because it runs as administrator, it
-only lives in, and only starts helper programs (PresentMon, cdb) from, folders that
-ordinary programs cannot change: Program Files and the Windows folder. Uninstalling removes the program; your data folder
-(`%LOCALAPPDATA%\app.veyl.monitor`) is kept unless you delete it. Windows crash
-history and crash-dump settings are never modified.
+**How do I find out why my PC crashed with a blue screen?**
+Open **Blue Screen Analyzer**. It lists each bugcheck with its stop code and a plain
+explanation. With Debugging Tools for Windows installed, click **Analyze** on the matching dump
+to see the driver or module that failed. Turn on the symbol server in Settings for the most
+precise result.
 
-### Background running
+**Why did my PC restart without a blue screen?**
+Veyl shows these as *unexpected shutdowns* (Kernel-Power 41 with no stop code). Common causes
+are power loss, a power supply problem, a hard freeze, or holding the power button. Check the
+recorded temperatures and load from just before the restart on the same page.
 
-Closing or minimizing the window sends it to the notification area (both configurable
-in Settings → General); monitoring, history and alerts keep running. Use the tray
-icon's **Exit** to quit.
+**Is Veyl a Wireshark alternative?**
+For everyday troubleshooting, yes. It captures live traffic, decodes common protocols and
+supports Wireshark-style display filters, without installing Npcap. It does not save `.pcap`
+files or reassemble TCP streams. For deep protocol work, Wireshark remains the specialist tool.
 
-### Updates
+**Does the FPS counter work with anti-cheat games?**
+Veyl measures FPS with Intel PresentMon, which reads presentation events that Windows already
+records. Nothing is injected into the game process.
 
-Installed builds check GitHub Releases for a newer version shortly after start and
-every 12 hours (Settings → Updates; can be turned off). Updates are signed and verified
-before installation, and are only installed when you click **Install and restart**.
+**Does Veyl install a kernel driver?**
+No. Packet capture uses Windows' built-in capture filter. CPU and motherboard sensors use the
+PawnIO driver only if you installed it yourself.
 
-## Optional integrations
+**Why does Veyl need administrator rights?**
+Reading kernel crash dumps, capturing frame times and network packets, and showing details of
+system processes all require them. Everything else would work as a standard user.
 
-| Integration | Adds | How |
-|---|---|---|
-| [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Download the console app (`PresentMon-x.y.z-x64.exe`), place it in the tools folder inside Veyl's Program Files folder (Settings → Integrations → Tools folder) or select a copy inside Program Files in Settings |
-| [PawnIO](https://pawnio.eu) (open source, signed) | CPU package/per-core temperatures (Intel), motherboard fans, voltages and temperatures (Nuvoton) | Install PawnIO; runs with the installed (elevated) build. The app ships only PawnIO's official signed LGPL modules, never the driver |
-| Debugging Tools for Windows | Blue-screen dump analysis (`!analyze -v`) | Install "Debugging Tools for Windows" from the Windows SDK installer, or select `cdb.exe` in Settings |
-| Microsoft symbol server | Better stack traces in dump analysis | Off by default; enable in Settings → Integrations. Only symbol files are downloaded; dumps never leave the PC |
-
-None of these are bundled. When one is missing, the related page says so and the rest
-of the application works normally.
-
-## Permissions
-
-Release builds request administrator rights at start. Features that rely on it:
-
-- FPS capture (PresentMon starts an ETW session; alternatively membership in *Performance Log Users*)
-- Listing/reading `%SystemRoot%\Minidump`, `MEMORY.DMP` and `LiveKernelReports`
-- Details (path, command line) and priority changes of other users' and service processes
-
-Everything else — CPU/GPU/memory/disk/network telemetry, processes, sensors exposed by
-Windows, NVMe health (on most systems), event logs — works as a standard user (debug
-builds run unelevated). Critical Windows processes are always protected from being ended.
-
-## Privacy
-
-All data stays in the local data folder. The only network requests are the update check
-(GitHub, can be disabled) and optional symbol downloads. Exports are written only to
-files you pick, with optional redaction of user name, profile path, computer name, SIDs
-and drive serial numbers.
-
-## Development
-
-See [DEVELOPMENT.md](DEVELOPMENT.md) for the toolchain and extension guides.
-
-```powershell
-npm install
-npm run tauri dev                                     # run in development (unelevated)
-npm run tauri build                                   # release exe + NSIS installer in target/release/bundle/nsis
-powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # formatting, lints, all tests, build
-```
-
-### Publishing a release (auto-update)
-
-1. Create the GitHub repository (the updater endpoint is
-   `https://github.com/LunoviaVR/Veyl/releases/latest/download/latest.json`; change
-   `plugins.updater.endpoints` in `src-tauri/tauri.conf.json` if the repository name differs).
-2. Add repository secrets `TAURI_SIGNING_PRIVATE_KEY` (the contents of
-   `%USERPROFILE%\.tauri\veyl.key`) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-   (empty). Back the key up: without it, installed copies cannot be updated.
-3. Bump the version in `src-tauri/tauri.conf.json`, `package.json` and `Cargo.toml`,
-   commit, and push a tag `vX.Y.Z`. The *Release* workflow builds, signs and drafts the
-   release; publish the draft to deliver the update.
+**Does Veyl collect data or need an account?**
+No. There is no telemetry and no account, and all data stays on your PC.
 
 ## Troubleshooting
 
-| Symptom | Cause / fix |
+<details>
+<summary>Common problems and fixes</summary>
+
+| Symptom | Cause and fix |
 |---|---|
-| "Package temp —" for the CPU | Windows exposes CPU die temperatures only to kernel drivers. Install PawnIO and run the installed (elevated) build. |
-| GPU hotspot "not reported" | Shown for AMD (ADLX) and NVIDIA (NVML) GPUs when the vendor driver reports it; WDDM alone reports edge temperature only. |
-| GPU power "not reported" | Your driver does not report power through WDDM (common on AMD). |
-| Gaming: "PresentMon not found" | Install PresentMon and select it in Settings. |
-| Gaming: permission error | Run the installed (elevated) build, or add your account to *Performance Log Users*. |
-| No dump files listed | Windows keeps minidumps only when *Startup and Recovery → Write debugging information* is enabled; old dumps are deleted by Windows. |
-| History empty for a period | The application was not running then; gaps are shown, never filled in. |
-| Logs | Settings → About → Logs (`%LOCALAPPDATA%\app.veyl.monitor\logs`). Set `VEYL_LOG=debug` for more detail. |
+| CPU "Package temp —" | Windows exposes CPU die temperatures only to kernel drivers. Install PawnIO. |
+| GPU hotspot "not reported" | Shown for AMD (ADLX) and NVIDIA (NVML) GPUs when the driver reports it; Windows alone reports only the edge temperature. |
+| GPU power "not reported" | Your driver does not report power to Windows (common on AMD). |
+| Gaming: "PresentMon not found" | Put `PresentMon-x.y.z-x64.exe` in the tools folder inside Veyl's Program Files folder. |
+| Network: "needs administrator rights" | Start Veyl from the Start menu (it runs as administrator), or add your account to *Performance Log Users*. |
+| No dump files listed | Windows keeps minidumps only when *Startup and Recovery → Write debugging information* is on, and deletes old ones itself. |
+| History empty for a period | Veyl wasn't running then; gaps are shaded, never filled in. |
+| Logs | **Settings → About → Logs** (`%LOCALAPPDATA%\app.veyl.monitor\logs`). Set `VEYL_LOG=debug` for more detail. |
+
+</details>
+
+## Build from source
+
+<details>
+<summary>Toolchain, commands and releases</summary>
+
+Requirements and extension guides are in [DEVELOPMENT.md](DEVELOPMENT.md).
+
+```powershell
+npm install
+npm run tauri dev                                            # run in development (not elevated)
+npm run tauri build                                          # release exe + installer in target/release/bundle/nsis
+powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # formatting, lints, all tests, build
+```
+
+**Publishing a release (auto-update):**
+
+1. The updater endpoint is
+   `https://github.com/LunoviaVR/Veyl/releases/latest/download/latest.json`; change
+   `plugins.updater.endpoints` in `src-tauri/tauri.conf.json` if the repository name differs.
+2. Add the repository secrets `TAURI_SIGNING_PRIVATE_KEY` (the contents of
+   `%USERPROFILE%\.tauri\veyl.key`) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (empty). Back
+   the key up: without it, installed copies cannot be updated.
+3. Bump the version in `src-tauri/tauri.conf.json`, `package.json` and `Cargo.toml`, commit,
+   and push a tag `vX.Y.Z`. The *Release* workflow builds, signs and drafts the release;
+   publish the draft to deliver the update.
+
+</details>
 
 ## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — modules, threads, data flow, security boundaries
-- [DEVELOPMENT.md](DEVELOPMENT.md) — adding sensor providers, diagnostic rules, pages
-- [COMPATIBILITY.md](COMPATIBILITY.md) — hardware, Windows versions, APIs, limitations
-- [PERFORMANCE.md](PERFORMANCE.md) — measured overhead and methodology
-- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) — what is done, partial, unsupported
-- [docs/METRICS.md](docs/METRICS.md) — exact metric definitions
+- [ARCHITECTURE.md](ARCHITECTURE.md): modules, threads, data flow, security boundaries
+- [COMPATIBILITY.md](COMPATIBILITY.md): supported hardware, Windows versions and limitations
+- [PERFORMANCE.md](PERFORMANCE.md): measured CPU and memory overhead
+- [docs/METRICS.md](docs/METRICS.md): exact definition of every metric
+- [DEVELOPMENT.md](DEVELOPMENT.md): adding sensor providers, diagnostic rules and pages
+- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md): what is done, partial or unsupported
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): bundled and used third-party components
