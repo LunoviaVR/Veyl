@@ -1,5 +1,5 @@
 # Builds the Windows installer, signs the updater artifacts and drafts a GitHub release.
-# Trigger: push a tag like v0.2.0 (the version in tauri.conf.json, package.json and
+# Trigger: push a tag like v1.0.0 (the version in tauri.conf.json, package.json and
 # Cargo.toml must match). Publish the draft to make the update visible to installed apps.
 #
 # Required repository secrets:
@@ -35,7 +35,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Veyl ${{ github.ref_name }}
-          releaseBody: Release notes are in the assets and the commit history.
+          releaseBody: "What's new: https://github.com/LunoviaVR/Veyl/blob/${{ github.ref_name }}/CHANGELOG.md"
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true

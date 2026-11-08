@@ -299,9 +299,9 @@ powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # formatting, lints
 2. Add the repository secrets `TAURI_SIGNING_PRIVATE_KEY` (the contents of
    `%USERPROFILE%\.tauri\veyl.key`) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (empty). Back
    the key up: without it, installed copies cannot be updated.
-3. Bump the version in `src-tauri/tauri.conf.json`, `package.json` and `Cargo.toml`, commit,
-   and push a tag `vX.Y.Z`. The *Release* workflow builds, signs and drafts the release;
-   publish the draft to deliver the update.
+3. Bump the version in `src-tauri/tauri.conf.json`, `package.json` and `Cargo.toml`, add the
+   release to `CHANGELOG.md`, commit, and push a tag `vX.Y.Z`. The *Release* workflow builds,
+   signs and drafts the release; publish the draft to deliver the update.
 
 </details>
 
@@ -314,3 +314,4 @@ powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # formatting, lints
 - [DEVELOPMENT.md](DEVELOPMENT.md): adding sensor providers, diagnostic rules and pages
 - [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md): what is done, partial or unsupported
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): bundled and used third-party components
+- [CHANGELOG.md](CHANGELOG.md): what changed in each release
