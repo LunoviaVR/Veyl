@@ -682,3 +682,13 @@ export interface UpdateStatus {
   lastError: string | null;
   installing: boolean;
 }
+
+export interface SpecItem {
+  label: string;
+  value: string;
+}
+
+export interface SpecSection {
+  title: string;
+  items: SpecItem[];
+}

@@ -151,6 +151,21 @@ export default function Bsod() {
             ))}
           </Panel>
           <Panel title="Dump files">
+            {o && (
+              <div className="mb-2 text-[12px] text-muted">
+                {o.debuggerPath ? (
+                  <>Debugger: <span className="font-mono text-[11px]">{o.debuggerPath}</span></>
+                ) : (
+                  <span className="flex items-start gap-1.5">
+                    <ShieldAlert className="size-3.5 mt-px text-warn shrink-0" />
+                    <span>
+                      Dump analysis needs Debugging Tools for Windows (cdb.exe), which is not installed. Install “Debugging Tools for Windows” from the Windows SDK installer, or select cdb.exe in <button className="underline" onClick={() => go("settings", { section: "integrations" })}>Settings</button>. Event-log information does not need it.
+                    </span>
+                  </span>
+                )}
+                {!o.elevated && <p className="mt-1 text-[11.5px] text-faint">Reading dumps in the Windows folder usually needs administrator rights (Settings → Restart as administrator).</p>}
+              </div>
+            )}
             {o?.dumps.inaccessible.map((p) => (
               <p key={p} className="text-[12px] text-warn flex items-center gap-1.5 mb-1">
                 <Lock className="size-3.5" /> {p} needs administrator rights to list.
@@ -162,25 +177,15 @@ export default function Bsod() {
                   <div className="truncate" title={d.path}>{d.path.split("\\").pop()}</div>
                   <div className="text-faint">{d.kind} · {f.bytes(d.sizeBytes)} · {f.dateTime(d.modifiedMs)}</div>
                 </div>
-                <Button className="ml-auto" disabled={!!busy || !o.debuggerPath} onClick={() => analyze(d.path)}>
-                  <FileSearch className="size-3.5" /> {busy === d.path ? "Analyzing…" : "Analyze"}
-                </Button>
+                {/* span carries the tooltip: disabled buttons get no pointer events */}
+                <span className="ml-auto" title={o.debuggerPath ? undefined : "Needs Debugging Tools for Windows (cdb.exe) — see the note above"}>
+                  <Button disabled={!!busy || !o.debuggerPath} onClick={() => analyze(d.path)}>
+                    <FileSearch className="size-3.5" /> {busy === d.path ? "Analyzing…" : "Analyze"}
+                  </Button>
+                </span>
               </div>
             ))}
             {o && o.dumps.files.length === 0 && <p className="text-[12px] text-muted">No dump files were found{o.dumps.inaccessible.length ? " in the accessible locations" : ""}. Windows deletes old minidumps and only keeps them when “Write debugging information” is enabled; this application does not change that setting.</p>}
-            <div className="mt-2 text-[12px] text-muted">
-              {o?.debuggerPath ? (
-                <>Debugger: <span className="font-mono text-[11px]">{o.debuggerPath}</span></>
-              ) : (
-                <span className="flex items-start gap-1.5">
-                  <ShieldAlert className="size-3.5 mt-px text-warn shrink-0" />
-                  <span>
-                    Dump analysis needs Debugging Tools for Windows (cdb.exe), which is not installed. Install “Debugging Tools for Windows” from the Windows SDK installer, or select cdb.exe in <button className="underline" onClick={() => go("settings", { section: "integrations" })}>Settings</button>. Event-log information above does not need it.
-                  </span>
-                </span>
-              )}
-            </div>
-            {!o?.elevated && <p className="mt-1 text-[11.5px] text-faint">Reading dumps in the Windows folder usually needs administrator rights (Settings → Restart as administrator).</p>}
           </Panel>
         </div>
         <div className="flex-1 min-w-0 overflow-y-auto flex flex-col gap-3">

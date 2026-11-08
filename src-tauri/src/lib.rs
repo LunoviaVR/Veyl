@@ -253,6 +253,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::system::get_system_info,
+            commands::system::get_pc_specs,
             commands::system::get_latest,
             commands::system::set_ui_visible,
             commands::system::get_runtime_status,
@@ -293,10 +294,12 @@ pub fn run() {
             commands::history::get_history,
             commands::history::get_alert_history,
             commands::history::get_active_alerts,
+            commands::history::clear_active_alerts,
             commands::settings::get_settings,
             commands::settings::save_settings,
             commands::settings::reset_alert_rules,
             commands::export::export_history_csv,
+            commands::export::export_pc_specs,
             commands::export::export_session_csv,
             commands::export::export_events_csv,
             commands::export::export_report,

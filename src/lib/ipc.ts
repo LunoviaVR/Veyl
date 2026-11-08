@@ -52,6 +52,9 @@ export const api = {
   history: (keys: string[], fromMs: number, toMs: number, maxPoints?: number) => call<T.Series[]>("get_history", { keys, fromMs, toMs, maxPoints }),
   alertHistory: (limit?: number) => call<T.AlertRow[]>("get_alert_history", { limit }),
   activeAlerts: () => call<T.AlertSignal[]>("get_active_alerts"),
+  pcSpecs: () => call<T.SpecSection[]>("get_pc_specs"),
+  exportPcSpecs: (format: "txt" | "csv") => call<string | null>("export_pc_specs", { format }),
+  clearActiveAlerts: () => call<void>("clear_active_alerts"),
 
   settings: () => call<T.Settings>("get_settings"),
   saveSettings: (settings: T.Settings) => call<T.Settings>("save_settings", { settings }),

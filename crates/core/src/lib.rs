@@ -17,6 +17,7 @@ pub mod model;
 pub mod rate;
 pub mod redact;
 pub mod sensor_map;
+pub mod specs;
 pub mod time;
 
 pub use model::*;

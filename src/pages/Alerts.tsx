@@ -1,4 +1,4 @@
-import { RotateCcw, Save } from "lucide-react";
+import { RotateCcw, Save, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNav } from "../App";
 import { type Column, DataTable } from "../components/DataTable";
@@ -135,7 +135,20 @@ export default function Alerts() {
       <div className="px-5 pb-5 flex flex-col gap-3">
         <ErrorNote error={error} />
         {msg && <p className="text-ok text-[12px]">{msg}</p>}
-        <Panel title={`Active (${active.data?.length ?? 0})`}>
+        <Panel
+          title={`Active (${active.data?.length ?? 0})`}
+          actions={
+            !!active.data?.length && (
+              <Button
+                variant="ghost"
+                title="Removes these from the active list. They stay in the history below."
+                onClick={() => api.clearActiveAlerts().then(active.refresh, (e) => setError(errorText(e)))}
+              >
+                <X className="size-3.5" /> Clear
+              </Button>
+            )
+          }
+        >
           {active.data?.length ? (
             active.data.map((a) => (
               <div key={`${a.ruleId}${a.metric}`} className="flex items-center gap-3 text-[12.5px] py-1">

@@ -12,6 +12,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use veyl_core::{GpuEngineUsage, GpuInfo, GpuSnapshot, GpusSnapshot, Status};
+use windows::core::Interface;
 use windows::Wdk::Graphics::Direct3D::{
     D3DKMTCloseAdapter, D3DKMTOpenAdapterFromLuid, D3DKMTQueryAdapterInfo, D3DKMT_ADAPTER_PERFDATA,
     D3DKMT_ADAPTER_PERFDATACAPS, D3DKMT_CLOSEADAPTER, D3DKMT_NODE_PERFDATA,
@@ -20,7 +21,7 @@ use windows::Wdk::Graphics::Direct3D::{
 };
 use windows::Win32::Foundation::LUID;
 use windows::Win32::Graphics::Dxgi::{
-    CreateDXGIFactory1, IDXGIFactory1, DXGI_ADAPTER_FLAG_SOFTWARE,
+    CreateDXGIFactory1, IDXGIDevice, IDXGIFactory1, DXGI_ADAPTER_FLAG_SOFTWARE,
 };
 
 use crate::handle::from_wide;
@@ -70,6 +71,41 @@ pub fn adapters() -> Result<Vec<(GpuInfo, LUID)>, String> {
         ));
     }
     Ok(out)
+}
+
+/// User-mode driver version per adapter LUID key, as Device Manager shows it
+/// (e.g. 32.0.15.6094).
+pub fn driver_versions() -> Vec<(String, String)> {
+    // SAFETY: plain factory creation; COM pointers released on drop.
+    let Ok(factory) = (unsafe { CreateDXGIFactory1::<IDXGIFactory1>() }) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for i in 0.. {
+        // SAFETY: valid factory; DXGI_ERROR_NOT_FOUND ends the enumeration.
+        let Ok(adapter) = (unsafe { factory.EnumAdapters1(i) }) else {
+            break;
+        };
+        // SAFETY: valid adapter.
+        let Ok(d) = (unsafe { adapter.GetDesc1() }) else {
+            continue;
+        };
+        // SAFETY: valid adapter; asking about IDXGIDevice returns the UMD version.
+        if let Ok(v) = unsafe { adapter.CheckInterfaceSupport(&IDXGIDevice::IID) } {
+            let v = v as u64;
+            out.push((
+                luid_key(d.AdapterLuid.HighPart, d.AdapterLuid.LowPart),
+                format!(
+                    "{}.{}.{}.{}",
+                    v >> 48,
+                    (v >> 32) & 0xFFFF,
+                    (v >> 16) & 0xFFFF,
+                    v & 0xFFFF
+                ),
+            ));
+        }
+    }
+    out
 }
 
 // ---------------------------------------------------------------------------

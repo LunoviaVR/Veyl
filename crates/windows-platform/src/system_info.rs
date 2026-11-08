@@ -3,7 +3,8 @@
 use veyl_core::{CpuInfo, SystemInfo};
 use windows::Wdk::System::SystemServices::RtlGetVersion;
 use windows::Win32::System::SystemInformation::{
-    ComputerNamePhysicalDnsHostname, GetComputerNameExW, GetTickCount64, OSVERSIONINFOW,
+    ComputerNamePhysicalDnsHostname, GetComputerNameExW, GetSystemFirmwareTable, GetTickCount64,
+    FIRMWARE_TABLE_PROVIDER, OSVERSIONINFOW,
 };
 
 use crate::handle::from_wide;
@@ -66,6 +67,25 @@ pub fn os_version() -> (Option<String>, Option<String>) {
     (Some(name), Some(build))
 }
 
+/// The SMBIOS structure table (RawSMBIOSData without its 8-byte header).
+/// Readable without administrator rights.
+pub fn smbios_table() -> Option<Vec<u8>> {
+    let rsmb = FIRMWARE_TABLE_PROVIDER(u32::from_be_bytes(*b"RSMB"));
+    // SAFETY: size query without a buffer.
+    let len = unsafe { GetSystemFirmwareTable(rsmb, 0, None) };
+    if len < 8 {
+        return None;
+    }
+    let mut buf = vec![0u8; len as usize];
+    // SAFETY: buffer of `len` bytes.
+    let got = unsafe { GetSystemFirmwareTable(rsmb, 0, Some(&mut buf)) };
+    if got < 8 || got > len {
+        return None;
+    }
+    let n = u32::from_le_bytes([buf[4], buf[5], buf[6], buf[7]]) as usize;
+    buf.get(8..8 + n).map(<[u8]>::to_vec)
+}
+
 pub fn boot_time_ms(now_ms: i64) -> i64 {
     // SAFETY: no preconditions.
     now_ms - unsafe { GetTickCount64() } as i64
@@ -94,5 +114,13 @@ mod tests {
         assert!(name.as_deref().is_some_and(|n| n.starts_with("Windows")));
         assert!(build.is_some());
         assert!(super::computer_name().is_some());
+    }
+
+    #[test]
+    fn reads_smbios() {
+        let t = super::smbios_table().expect("SMBIOS table");
+        let s = veyl_core::specs::parse_smbios(&t);
+        assert!(s.bios_version.is_some(), "{s:?}");
+        assert!(!s.modules.is_empty(), "{s:?}");
     }
 }

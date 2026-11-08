@@ -1,4 +1,4 @@
-use tauri::State;
+use tauri::{AppHandle, Emitter, State};
 use veyl_core::alerts::AlertSignal;
 use veyl_storage::{AlertRow, MetricInfo, Series};
 
@@ -43,4 +43,12 @@ pub fn get_alert_history(
 #[tauri::command]
 pub fn get_active_alerts(state: State<'_, AppState>) -> Vec<AlertSignal> {
     state.live.read().active_alerts.clone()
+}
+
+/// Clears the active-alert list only; alert history stays. The engine keeps the
+/// rule triggered, so a cleared alert returns only after it recovers and fires anew.
+#[tauri::command]
+pub fn clear_active_alerts(app: AppHandle, state: State<'_, AppState>) {
+    state.live.write().active_alerts.clear();
+    let _ = app.emit("alert", ()); // every view showing active alerts refetches on this
 }

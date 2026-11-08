@@ -3,11 +3,44 @@ use std::sync::atomic::Ordering;
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_opener::OpenerExt;
+use veyl_core::specs::{parse_smbios, sections, SpecSection, SpecsInput};
 use veyl_core::{SystemInfo, TelemetryFrame};
 use veyl_storage::DbStats;
+use veyl_windows::{cpu, display, gpu, system_info};
 
 use super::CmdResult;
 use crate::state::{AppState, ChannelStatus};
+
+/// The spec sheet shown on the PC Specs page and written by its exports.
+pub(crate) fn pc_specs(state: &AppState) -> Vec<SpecSection> {
+    let system = state.system_info.read().clone();
+    let (drives, adapters) = {
+        let live = state.live.read();
+        let adapters = live
+            .frame
+            .as_ref()
+            .map(|f| f.network.adapters.clone())
+            .unwrap_or_default();
+        (live.drives.clone(), adapters)
+    };
+    let smbios = system_info::smbios_table()
+        .map(|t| parse_smbios(&t))
+        .unwrap_or_default();
+    sections(&SpecsInput {
+        system: &system,
+        smbios: &smbios,
+        caches: cpu::cache_sizes(),
+        gpu_drivers: &gpu::driver_versions(),
+        displays: &display::displays(),
+        drives: &drives,
+        adapters: &adapters,
+    })
+}
+
+#[tauri::command(async)]
+pub fn get_pc_specs(state: State<'_, AppState>) -> Vec<SpecSection> {
+    pc_specs(&state)
+}
 
 #[tauri::command]
 pub fn get_system_info(state: State<'_, AppState>) -> SystemInfo {

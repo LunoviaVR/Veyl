@@ -12,8 +12,8 @@ use std::arch::x86_64::__cpuid;
 use veyl_core::{CpuInfo, CpuSnapshot, Status};
 use windows::Win32::System::ProcessStatus::{GetPerformanceInfo, PERFORMANCE_INFORMATION};
 use windows::Win32::System::SystemInformation::{
-    GetLogicalProcessorInformationEx, GetTickCount64, RelationAll, RelationProcessorCore,
-    RelationProcessorPackage, SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,
+    GetLogicalProcessorInformationEx, GetTickCount64, RelationAll, RelationCache,
+    RelationProcessorCore, RelationProcessorPackage, SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,
 };
 
 use crate::pdh::{Counter, PdhError, PdhQuery};
@@ -54,6 +54,8 @@ struct Topology {
     packages: u32,
     /// Number of cores per efficiency class.
     classes: std::collections::BTreeMap<u8, u32>,
+    /// Total bytes of L1 (data + instruction), L2 and L3 cache.
+    caches: [u64; 3],
 }
 
 fn topology() -> Result<Topology, String> {
@@ -98,10 +100,21 @@ fn topology() -> Result<Topology, String> {
             }
         } else if entry.Relationship == RelationProcessorPackage {
             t.packages += 1;
+        } else if entry.Relationship == RelationCache {
+            // SAFETY: relationship selects the Cache member.
+            let c = unsafe { &entry.Anonymous.Cache };
+            if let Some(total) = t.caches.get_mut(usize::from(c.Level).wrapping_sub(1)) {
+                *total += u64::from(c.CacheSize);
+            }
         }
         off += size;
     }
     Ok(t)
+}
+
+/// Total L1, L2 and L3 cache in bytes, as Task Manager sums them.
+pub fn cache_sizes() -> [Option<u64>; 3] {
+    topology().map_or([None; 3], |t| t.caches.map(|b| (b > 0).then_some(b)))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

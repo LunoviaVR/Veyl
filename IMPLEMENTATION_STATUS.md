@@ -8,7 +8,7 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 
 | Item | State | Notes |
 |---|---|---|
-| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 129 Rust tests, clippy `-D warnings` clean |
+| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 135 Rust tests, clippy `-D warnings` clean |
 | React + TS (strict) + Vite + Tailwind 4, Radix primitives, Lucide, uPlot, TanStack Virtual | Done | 16 frontend tests |
 | Manual QA pass of every page on the release build | Done (2026-11-07) | Unelevated; elevated-only sensors verified separately with `examples/probe.rs` |
 | Settings (validated, atomic save), structured logging (daily rotation, 7 files) | Done | |
@@ -62,8 +62,9 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 | Dump analysis via cdb `!analyze -v` | Done (not exercised: Debugging Tools not installed) | Output parser tested |
 | Diagnostic rules (13) with evidence | Done | |
 | Stability timeline, daily chart, "around this time" view | Done | |
-| Alerts: thresholds with duration/hysteresis/cooldown, event alerts, notifications | Done | |
+| Alerts: thresholds with duration/hysteresis/cooldown, event alerts, notifications, clear active list (history kept) | Done | |
 | History: 5 s + 1 min tiers, retention, category cards, select-all, shaded no-data periods, custom ranges, CSV | Done | |
+| PC Specs: SMBIOS board/BIOS/RAM modules, CPU caches, GPU driver, displays, drives, network; TXT and CSV export (no serials) | Done | Verified on this PC; export dialog not clicked |
 | Exports: history/session/events CSV, JSON report, redaction | Done | |
 
 ## Not yet done

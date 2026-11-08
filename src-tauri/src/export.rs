@@ -2,6 +2,7 @@
 
 use veyl_core::events::StabilityEvent;
 use veyl_core::redact::{redact, RedactionContext};
+use veyl_core::specs::SpecSection;
 use veyl_core::time::format_iso8601_utc_ms;
 use veyl_storage::Series;
 
@@ -98,6 +99,44 @@ pub fn events_csv(events: &[StabilityEvent], ctx: Option<&RedactionContext>) -> 
     out
 }
 
+/// Plain-text spec sheet with aligned labels.
+pub fn specs_text(sections: &[SpecSection], generated_ms: i64) -> String {
+    let width = sections
+        .iter()
+        .flat_map(|s| &s.items)
+        .map(|i| i.label.chars().count())
+        .max()
+        .unwrap_or(0);
+    let mut out = format!(
+        "PC specs, exported by Veyl {} on {}\n",
+        env!("CARGO_PKG_VERSION"),
+        format_iso8601_utc_ms(generated_ms)
+    );
+    for s in sections {
+        out.push_str(&format!("\n{}\n", s.title.to_uppercase()));
+        for i in &s.items {
+            out.push_str(&format!("  {:<width$}  {}\n", i.label, i.value));
+        }
+    }
+    out
+}
+
+/// One row per spec. Starts with a UTF-8 BOM so Excel shows "×" and "·" correctly.
+pub fn specs_csv(sections: &[SpecSection]) -> String {
+    let mut out = String::from("\u{feff}section,item,value\n");
+    for s in sections {
+        for i in &s.items {
+            out.push_str(&format!(
+                "{},{},{}\n",
+                csv_field(&s.title),
+                csv_field(&i.label),
+                csv_field(&i.value)
+            ));
+        }
+    }
+    out
+}
+
 pub fn redaction_context(computer_name: Option<&str>) -> RedactionContext {
     RedactionContext {
         user_name: std::env::var("USERNAME").unwrap_or_default(),
@@ -109,6 +148,34 @@ pub fn redaction_context(computer_name: Option<&str>) -> RedactionContext {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn spec_exports() {
+        use veyl_core::specs::SpecItem;
+        let item = |l: &str, v: &str| SpecItem {
+            label: l.into(),
+            value: v.into(),
+        };
+        let secs = vec![
+            SpecSection {
+                title: "Processor".into(),
+                items: vec![
+                    item("Name", "Intel(R) Core(TM) i9"),
+                    item("L3 cache", "36 MB"),
+                ],
+            },
+            SpecSection {
+                title: "Memory".into(),
+                items: vec![item("DIMM_A2", "16 GB DDR5, \"XMP\"")],
+            },
+        ];
+        let txt = specs_text(&secs, 0);
+        assert!(txt.contains("on 1970-01-01T00:00:00.000Z\n\nPROCESSOR\n  Name      Intel(R) Core(TM) i9\n  L3 cache  36 MB\n"), "{txt}");
+        assert_eq!(
+            specs_csv(&secs),
+            "\u{feff}section,item,value\nProcessor,Name,Intel(R) Core(TM) i9\nProcessor,L3 cache,36 MB\nMemory,DIMM_A2,\"16 GB DDR5, \"\"XMP\"\"\"\n"
+        );
+    }
 
     #[test]
     fn quoting() {

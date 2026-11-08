@@ -1,6 +1,7 @@
 import {
   Activity,
   BarChart3,
+  ClipboardList,
   Bell,
   Bomb,
   ChevronsLeft,
@@ -33,9 +34,10 @@ import Overview from "./pages/Overview";
 import Performance from "./pages/Performance";
 import Processes from "./pages/Processes";
 import SettingsPage from "./pages/Settings";
+import Specs from "./pages/Specs";
 import Stability from "./pages/Stability";
 
-export type PageId = "overview" | "processes" | "performance" | "hardware" | "gaming" | "stability" | "crashes" | "bsod" | "history" | "alerts" | "settings";
+export type PageId = "overview" | "processes" | "performance" | "hardware" | "gaming" | "stability" | "crashes" | "bsod" | "history" | "specs" | "alerts" | "settings";
 
 interface NavItem {
   id: PageId;
@@ -61,6 +63,7 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
       { id: "crashes", label: "Crash Reports", icon: ShieldAlert },
       { id: "bsod", label: "Blue Screen Analyzer", icon: Bomb },
       { id: "history", label: "History", icon: HistoryIcon },
+      { id: "specs", label: "PC Specs", icon: ClipboardList },
       { id: "alerts", label: "Alerts", icon: Bell },
     ],
   },
@@ -159,6 +162,7 @@ export default function App() {
     crashes: <Crashes />,
     bsod: <Bsod />,
     history: <HistoryPage />,
+    specs: <Specs />,
     alerts: <Alerts />,
     settings: <SettingsPage />,
   };

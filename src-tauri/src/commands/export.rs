@@ -10,7 +10,9 @@ use veyl_core::events::classify;
 use veyl_core::redact::redact;
 
 use super::{check_range, CmdResult};
-use crate::export::{events_csv, frametimes_csv, redaction_context, series_csv};
+use crate::export::{
+    events_csv, frametimes_csv, redaction_context, series_csv, specs_csv, specs_text,
+};
 use crate::state::{now_ms, AppState};
 
 fn ask_path(app: &AppHandle, default_name: &str, ext: &str, label: &str) -> Option<PathBuf> {
@@ -43,6 +45,29 @@ pub fn export_history_csv(
         return Ok(None);
     };
     write(path, series_csv(&series))
+}
+
+#[tauri::command(async)]
+pub fn export_pc_specs(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    format: String,
+) -> CmdResult<Option<String>> {
+    let (name, label) = match format.as_str() {
+        "txt" => ("pc-specs.txt", "Text"),
+        "csv" => ("pc-specs.csv", "CSV"),
+        _ => return Err("Unsupported export format".into()),
+    };
+    let sections = super::system::pc_specs(&state);
+    let text = if format == "txt" {
+        specs_text(&sections, now_ms())
+    } else {
+        specs_csv(&sections)
+    };
+    let Some(path) = ask_path(&app, name, &format, label) else {
+        return Ok(None);
+    };
+    write(path, text)
 }
 
 #[tauri::command(async)]
