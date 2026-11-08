@@ -2,6 +2,13 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.1 (2026-11-08)
+
+### Fixed
+
+- Live data (Overview, Performance, Gaming) froze after reopening Veyl from the notification
+  area. It now resumes as soon as the window opens.
+
 ## 1.0.0 (2026-11-08)
 
 The first release of Veyl, a Windows 11 and Windows 10 PC health monitor, hardware monitor and
