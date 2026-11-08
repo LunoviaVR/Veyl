@@ -76,29 +76,23 @@ impl HardwareSensorProvider for ThermalZoneProvider {
     }
 
     fn poll(&mut self, now_ms: i64) -> ProviderPoll {
+        let fail = |e: PdhError| ProviderPoll {
+            status: if e.is_not_found() {
+                Status::new(
+                    Availability::Unsupported,
+                    "This system exposes no ACPI thermal zones",
+                )
+            } else {
+                Status::error(format!("Thermal zone counters: {e}"))
+            },
+            readings: vec![],
+        };
         let c = match &mut self.counters {
             Ok(c) => c,
-            Err(e) if e.is_not_found() => {
-                return ProviderPoll {
-                    status: Status::new(
-                        Availability::Unsupported,
-                        "This system exposes no ACPI thermal zones",
-                    ),
-                    readings: vec![],
-                }
-            }
-            Err(e) => {
-                return ProviderPoll {
-                    status: Status::error(format!("Thermal zone counters: {e}")),
-                    readings: vec![],
-                }
-            }
+            Err(e) => return fail(*e),
         };
         if let Err(e) = c.query.collect() {
-            return ProviderPoll {
-                status: Status::error(format!("Thermal zone counters: {e}")),
-                readings: vec![],
-            };
+            return fail(e);
         }
         let mut readings = Vec::new();
         let mut push = |zone: &str, label: &str, kind, unit: &str, value: Option<f64>| {

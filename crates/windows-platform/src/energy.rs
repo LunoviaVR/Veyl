@@ -69,29 +69,23 @@ impl HardwareSensorProvider for EnergyMeterProvider {
     }
 
     fn poll(&mut self, now_ms: i64) -> ProviderPoll {
+        let fail = |e: PdhError| ProviderPoll {
+            status: if e.is_not_found() {
+                Status::new(
+                    Availability::Unsupported,
+                    "This system does not publish Energy Meter counters",
+                )
+            } else {
+                Status::error(format!("Energy Meter counters: {e}"))
+            },
+            readings: vec![],
+        };
         let (q, c) = match &mut self.counters {
             Ok(x) => x,
-            Err(e) if e.is_not_found() => {
-                return ProviderPoll {
-                    status: Status::new(
-                        Availability::Unsupported,
-                        "This system does not publish Energy Meter counters",
-                    ),
-                    readings: vec![],
-                }
-            }
-            Err(e) => {
-                return ProviderPoll {
-                    status: Status::error(format!("Energy Meter counters: {e}")),
-                    readings: vec![],
-                }
-            }
+            Err(e) => return fail(*e),
         };
         if let Err(e) = q.collect() {
-            return ProviderPoll {
-                status: Status::error(format!("Energy Meter counters: {e}")),
-                readings: vec![],
-            };
+            return fail(e);
         }
         let items = match q.array(*c, true) {
             Ok(i) => i,

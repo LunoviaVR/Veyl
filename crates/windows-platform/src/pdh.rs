@@ -17,8 +17,9 @@ use crate::handle::{from_pwstr, wide};
 /// pdh.h: `#define PDH_FMT_NOCAP100 ((DWORD) 0x00008000)` — do not clamp values above 100.
 const PDH_FMT_NOCAP100: u32 = 0x0000_8000;
 /// pdhmsg.h: `PDH_CSTATUS_NO_INSTANCE` 0x800007D1, `PDH_CSTATUS_NO_OBJECT` 0xC0000BB8,
-/// `PDH_CSTATUS_NO_COUNTER` 0xC0000BB9: the object or counter does not exist on this system.
-const NOT_FOUND: [u32; 3] = [0x8000_07D1, 0xC000_0BB8, 0xC000_0BB9];
+/// `PDH_CSTATUS_NO_COUNTER` 0xC0000BB9: the object or counter does not exist on this system;
+/// `PDH_NO_DATA` 0x800007D5: a wildcard counter has no instances (virtual machines, for example).
+const NOT_FOUND: [u32; 4] = [0x8000_07D1, 0xC000_0BB8, 0xC000_0BB9, 0x8000_07D5];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PdhError {
@@ -190,5 +191,21 @@ impl Drop for PdhQuery {
         if code != 0 {
             tracing::warn!("PdhCloseQuery failed (0x{code:08X})");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_counters_and_empty_wildcards_count_as_not_present() {
+        let e = |code| PdhError { call: "x", code };
+        assert!(e(0xC000_0BB8).is_not_found(), "no such object");
+        assert!(
+            e(0x8000_07D5).is_not_found(),
+            "PDH_NO_DATA: no instances (VMs)"
+        );
+        assert!(!e(0xC000_0BC6).is_not_found(), "other failures stay errors");
     }
 }
