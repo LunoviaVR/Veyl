@@ -1,5 +1,7 @@
 //! Notification-area icon: open the window, toggle the overlay, exit.
 
+use std::sync::atomic::Ordering;
+
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
@@ -11,6 +13,10 @@ pub fn show_main(app: &AppHandle) {
         let _ = w.unminimize();
         let _ = w.show();
         let _ = w.set_focus();
+        // Hiding stops live events; WebView2 never tells the page it was hidden, so the page can't resume them.
+        app.state::<AppState>()
+            .ui_visible
+            .store(true, Ordering::Relaxed);
     }
 }
 
