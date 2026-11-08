@@ -2,8 +2,8 @@
 
 **Veyl is a Windows 11 and Windows 10 system monitor that shows why your PC is slow, hot or unstable.**
 It combines a Task Manager–style process monitor, a hardware sensor monitor (CPU and GPU
-temperatures, fan speeds, voltages, power), an FPS counter with frame-time analysis, a blue screen
-(BSOD) analyzer, an application crash viewer, a network packet capture tool and long-term
+temperatures, fan speeds, voltages, power), an FPS counter and in-game overlay with frame-time
+analysis, a blue screen (BSOD) analyzer, an application crash viewer, a network packet capture tool and long-term
 performance history in one window. Every number comes from real Windows data. Nothing is
 estimated, and no telemetry leaves your PC.
 
@@ -105,24 +105,27 @@ among thousands of packets. Captured packets stay in memory and are never saved 
 
 ![Veyl network packet capture showing DNS and ICMP packets, a display filter, protocol layers and a hex dump](docs/screenshots/network.png)
 
-### FPS counter and frame-time analysis for games
+### FPS counter, in-game FPS overlay and frame-time analysis
 
-Average FPS, 1 % and 0.1 % lows, 95th and 99th percentile frame times, stutter count and frame
-pacing, with CPU and GPU load and temperatures recorded alongside. You can save sessions,
-compare them, export them to CSV and show an optional in-game overlay. It uses Intel PresentMon,
-which reads the timing events Windows already records, so nothing is injected into the game.
-Capture starts by itself when a game is running and stops when it closes. The overlay sits on
-the game's window (any corner, the middle of an edge or the centre), follows it, and shows only
-while that game is the active window. A game is a program with a window that is on Windows' Game
-Bar list or runs from a Steam, Epic, GOG, EA, Ubisoft or Xbox library; apps Steam itself lists as
-software or tools (Blender, OBS Studio, Wallpaper Engine...) are left out. Missed one? Press Win+G
-in the game and tick "Remember this is a game".
+- **Automatic.** Capture starts by itself when a game opens and stops when it closes, and the
+  session is saved. A game is a program with a window that is on Windows' Game Bar list or runs
+  from a Steam, Epic, GOG, EA, Ubisoft or Xbox library. Apps that Steam itself lists as software
+  or tools (Blender, OBS Studio, Wallpaper Engine...) are left out.
+- **The numbers that matter.** Average FPS, 1 % and 0.1 % lows, 95th and 99th percentile frame
+  times, stutter and frame pacing, with CPU and GPU load and temperatures recorded alongside.
+  Save sessions, compare two of them, or export them to CSV.
+- **In-game FPS overlay.** It appears only while a game is the active window, never over other
+  apps. It sits on the game's own window at any of nine spots (corners, edges or centre) and
+  follows the window when it moves.
+- **17 overlay designs in four themes.** Sleek Compact, Sleek Rings, Sleek Meters, Sleek Side,
+  Performance, and laptop and TV layouts, each in Dark, Smoke, Float or White, from
+  [Apple-Style RTSS Overlays](https://github.com/realHfde/Apple-Style-Inspired-RTSS-Overlay) by
+  realHfde (MIT). Pick one on the Gaming page with a live preview. Veyl draws them with its own
+  readings, so RivaTuner and MSI Afterburner aren't needed, and the Inter font they use is bundled.
+- **Nothing injected into the game.** Frame times come from Intel PresentMon, which reads the
+  timing events Windows already records. One click on the Gaming page installs it.
 
-Pick the overlay's look on the Gaming page: 17 designs (Sleek Compact, Sleek Rings, Sleek Side,
-Performance, laptop and TV layouts and more) in Dark, Smoke, Float or White, from
-[Apple-Style RTSS Overlays](https://github.com/realHfde/Apple-Style-Inspired-RTSS-Overlay) by
-realHfde (MIT). Veyl draws them itself with its own readings, so RivaTuner and Afterburner are not
-needed; the Inter font they are set in is bundled.
+![Veyl FPS counter capturing a game automatically, with FPS, 1% lows, a frame-time chart, CPU and GPU temperatures and the in-game overlay style picker](docs/screenshots/gaming.png)
 
 ### Performance history and CSV export
 
@@ -232,6 +235,17 @@ files or reassemble TCP streams. For deep protocol work, Wireshark remains the s
 Veyl measures FPS with Intel PresentMon, which reads presentation events that Windows already
 records. Nothing is injected into the game process.
 
+**Does Veyl have an in-game FPS overlay like RivaTuner?**
+Yes, without RivaTuner or Afterburner. Turn on **Overlay** on the Gaming page, then pick its
+design, theme and position there. It shows over borderless and windowed games while they are the
+active window; games in exclusive fullscreen draw over it.
+
+**Which games does Veyl detect automatically?**
+Programs with a window that Windows' Game Bar knows as games, or that run from a Steam, Epic, GOG,
+EA, Ubisoft or Xbox library (minus the apps Steam lists as software). If one is missed, press
+Win+G in the game and tick "Remember this is a game", or click **Capture** next to it on the
+Gaming page.
+
 **Does Veyl install a kernel driver?**
 No. Packet capture uses Windows' built-in capture filter. CPU and motherboard sensors use the
 PawnIO driver only if you installed it yourself.
@@ -253,6 +267,8 @@ No. There is no telemetry and no account, and all data stays on your PC.
 | CPU "Package temp —" | Windows exposes CPU die temperatures only to kernel drivers. Install PawnIO. |
 | GPU hotspot "not reported" | Shown for AMD (ADLX) and NVIDIA (NVML) GPUs when the driver reports it; Windows alone reports only the edge temperature. |
 | GPU power "not reported" | Your driver does not report power to Windows (common on AMD). |
+| Overlay not showing | It appears only while a detected game is the active window, and only over borderless or windowed games. Check that **Overlay** is on at the top of the Gaming page. |
+| Capture didn't start for a game | Press Win+G in the game and tick "Remember this is a game", or click **Capture** next to it on the Gaming page. |
 | Gaming: "PresentMon not found" | Click **Install PresentMon** on the Gaming page, or put `PresentMon-x.y.z-x64.exe` in the tools folder inside Veyl's Program Files folder. |
 | Network: "needs administrator rights" | Start Veyl from the Start menu (it runs as administrator), or add your account to *Performance Log Users*. |
 | No dump files listed | Windows keeps minidumps only when *Startup and Recovery → Write debugging information* is on, and deletes old ones itself. |
