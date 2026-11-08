@@ -263,7 +263,7 @@ export default function Settings() {
                   )}
                 </span>,
               ],
-              ["Needs administrator", "Frame capture without Performance Log Users membership, reading kernel dumps and live kernel reports, details of protected processes. Installed (release) builds start as administrator; Windows shows a UAC prompt at launch."],
+              ["Needs administrator", "Frame and packet capture without Performance Log Users membership, reading kernel dumps and live kernel reports, details of protected processes. Installed (release) builds start as administrator; Windows shows a UAC prompt at launch."],
               ["Data folder", <span className="font-mono text-[11.5px]">{rs?.dataDir}</span>],
               ["Logs", <span className="font-mono text-[11.5px]">{rs?.logDir}</span>],
               ["Monitor overhead", `CPU ${f.pct(self?.cpuPct, 2)} · memory ${f.bytes(self?.workingSetBytes)} · ${f.ms(self?.tickCostMs)} per sampling tick`],

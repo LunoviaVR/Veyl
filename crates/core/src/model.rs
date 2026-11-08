@@ -238,6 +238,8 @@ pub struct NetworkSnapshot {
 #[serde(rename_all = "camelCase")]
 pub struct NetworkAdapterSnapshot {
     pub luid: u64,
+    /// Windows interface index (NET_IFINDEX); identifies the adapter in packet captures.
+    pub if_index: u32,
     pub alias: String,
     pub description: String,
     pub media: String,
@@ -311,6 +313,8 @@ pub struct ProcessTable {
     pub timestamp_ms: i64,
     pub logical_processors: u32,
     pub rows: Vec<ProcessRow>,
+    /// Processes owning a visible app window (Task Manager's "Apps" group).
+    pub app_pids: Vec<u32>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]

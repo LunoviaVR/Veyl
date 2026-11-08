@@ -9,6 +9,7 @@ mod gaming;
 mod metrics;
 mod notify;
 mod overlay;
+mod packets;
 mod sampler;
 mod settings;
 mod state;
@@ -158,6 +159,9 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         started_ms: now_ms(),
     });
     app.manage(SamplerStop(Mutex::new(Some(stop_tx))));
+    app.manage(packets::Capture::default());
+    // A capture session left by a run that did not exit cleanly keeps logging; end it.
+    veyl_windows::packet_capture::stop_stale_session();
     app.manage(updater::Updates::default());
 
     let handle = app.handle().clone();
@@ -200,6 +204,7 @@ fn shutdown(app: &AppHandle) {
     tracing::info!("shutting down");
     // Dropping the sender wakes the sampler immediately.
     app.state::<SamplerStop>().0.lock().take();
+    app.state::<packets::Capture>().stop();
     let threads: Vec<_> = state.threads.lock().drain(..).collect();
     for (name, h) in threads {
         if h.join().is_err() {
@@ -290,6 +295,13 @@ pub fn run() {
             commands::gaming::get_game_session,
             commands::gaming::delete_game_session,
             commands::gaming::set_overlay_enabled,
+            commands::network::get_capture_interfaces,
+            commands::network::start_packet_capture,
+            commands::network::stop_packet_capture,
+            commands::network::clear_packets,
+            commands::network::get_packets,
+            commands::network::get_packet_detail,
+            commands::network::check_packet_filter,
             commands::history::get_metric_catalog,
             commands::history::get_history,
             commands::history::get_alert_history,

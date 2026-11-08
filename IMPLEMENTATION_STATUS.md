@@ -8,7 +8,7 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 
 | Item | State | Notes |
 |---|---|---|
-| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 135 Rust tests, clippy `-D warnings` clean |
+| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 155 Rust tests, clippy `-D warnings` clean |
 | React + TS (strict) + Vite + Tailwind 4, Radix primitives, Lucide, uPlot, TanStack Virtual | Done | 16 frontend tests |
 | Manual QA pass of every page on the release build | Done (2026-11-07) | Unelevated; elevated-only sensors verified separately with `examples/probe.rs` |
 | Settings (validated, atomic save), structured logging (daily rotation, 7 files) | Done | |
@@ -31,7 +31,7 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 | GPU: utilization per engine, VRAM, temperature, fan, power %, core & memory clock, rated max | Done | Vendor-neutral WDDM; what the driver reports varies (RX 9060 XT: no power) |
 | GPU hotspot, board power, voltage (AMD) | Done | ADLX; verified on RX 9060 XT |
 | GPU temperature, power, fan, clocks (NVIDIA) | Done (not verified on hardware) | NVML |
-| Processes: full table, tree, CPU/mem/commit/I/O/GPU/VRAM/threads/handles/status/start/path | Done | 700+ processes, virtualized |
+| Processes: full table, apps grouped first in the default order, tree, CPU/mem/commit/I/O/GPU/VRAM/threads/handles/status/start/path | Done | 700+ processes, virtualized |
 | End task / tree, priority, properties, open location, copy PID | Done | PID-reuse check, critical-process refusal, confirmation dialogs |
 | Services, startup apps (read-only) | Done | |
 | ACPI thermal zones incl. passive limit / throttle reasons | Done | |
@@ -64,7 +64,8 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 | Stability timeline, daily chart, "around this time" view | Done | |
 | Alerts: thresholds with duration/hysteresis/cooldown, event alerts, notifications, clear active list (history kept) | Done | |
 | History: 5 s + 1 min tiers, retention, category cards, select-all, shaded no-data periods, custom ranges, CSV | Done | |
-| PC Specs: SMBIOS board/BIOS/RAM modules, CPU caches, GPU driver, displays, drives, network; TXT and CSV export (no serials) | Done | Verified on this PC; export dialog not clicked |
+| PC Specs: SMBIOS board/BIOS/RAM modules, CPU caches, GPU driver, displays, drives, network; TXT and CSV export (no serials) | Done | Verified on this PC, TXT export clicked through |
+| Network: live packet capture (Windows NDIS capture over ETW, needs admin), dissectors (Ethernet, ARP, IPv4/6, TCP, UDP, ICMP, DNS/mDNS/LLMNR, HTTP/1.x, TLS SNI, SMB2, QUIC, DHCP), display filters, hex view; memory only | Done | Verified on this PC: capture, filters, presets, field filter, hex highlight, stop/clear, external stop; 1.5M random frames fuzzed |
 | Exports: history/session/events CSV, JSON report, redaction | Done | |
 
 ## Not yet done

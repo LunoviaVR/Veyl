@@ -21,6 +21,14 @@ export interface SortState {
   desc: boolean;
 }
 
+/** A full-width section heading between rows (e.g. "Apps"); not selectable. */
+export interface GroupRow {
+  groupHeader: string;
+  key: string;
+}
+
+const isGroup = (r: unknown): r is GroupRow => typeof (r as Partial<GroupRow> | null)?.groupHeader === "string";
+
 export function sortRows<T>(rows: T[], columns: Column<T>[], sort: SortState | null): T[] {
   const col = sort && columns.find((c) => c.id === sort.id);
   if (!col?.sortValue) return rows;
@@ -54,7 +62,7 @@ export function DataTable<T>({
   label,
   empty = "Nothing to show",
 }: {
-  rows: T[];
+  rows: (T | GroupRow)[];
   columns: Column<T>[];
   rowKey: (r: T) => string;
   sort?: SortState | null;
@@ -72,25 +80,35 @@ export function DataTable<T>({
   const scroller = useRef<HTMLDivElement>(null);
   const v = useVirtualizer({ count: rows.length, getScrollElement: () => scroller.current, estimateSize: () => rowHeight, overscan: 12 });
   const template = useMemo(() => columns.map((c) => (typeof c.width === "number" ? `${c.width}px` : c.width)).join(" "), [columns]);
-  const selIndex = selected == null ? -1 : rows.findIndex((r) => rowKey(r) === selected);
+  const selIndex = selected == null ? -1 : rows.findIndex((r) => !isGroup(r) && rowKey(r) === selected);
+  const rowAt = (i: number): T | undefined => {
+    const r = rows[i];
+    return r === undefined || isGroup(r) ? undefined : r;
+  };
 
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (!rows.length) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      const next = Math.max(0, Math.min(rows.length - 1, selIndex + (e.key === "ArrowDown" ? 1 : -1)));
-      const r = rows[next];
-      if (r) {
-        onSelect?.(rowKey(r), r);
-        v.scrollToIndex(next, { align: "auto" });
+      const step = e.key === "ArrowDown" || selIndex < 0 ? 1 : -1;
+      // Move to the nearest row in that direction, stepping over group headings.
+      for (let i = selIndex + step; i >= 0 && i < rows.length; i += step) {
+        const r = rowAt(i);
+        if (r) {
+          onSelect?.(rowKey(r), r);
+          v.scrollToIndex(i, { align: "auto" });
+          break;
+        }
       }
-    } else if (e.key === "Enter" && selIndex >= 0) {
-      const r = rows[selIndex];
+    } else if (e.key === "Enter") {
+      const r = rowAt(selIndex);
       if (r) onActivate?.(r);
-    } else if ((e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) && selIndex >= 0) {
-      e.preventDefault();
-      const r = rows[selIndex];
-      if (r) onContextMenu?.(r, e);
+    } else if (e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) {
+      const r = rowAt(selIndex);
+      if (r) {
+        e.preventDefault();
+        onContextMenu?.(r, e);
+      }
     }
   };
 
@@ -120,6 +138,17 @@ export function DataTable<T>({
         <div style={{ height: v.getTotalSize(), position: "relative" }}>
           {v.getVirtualItems().map((vi) => {
             const r = rows[vi.index]!;
+            if (isGroup(r))
+              return (
+                <div
+                  key={r.key}
+                  role="row"
+                  className="absolute left-0 right-0 flex items-end px-2 pb-1 border-b border-line text-[11.5px] font-semibold text-muted"
+                  style={{ height: rowHeight, transform: `translateY(${vi.start}px)` }}
+                >
+                  <span role="rowheader">{r.groupHeader}</span>
+                </div>
+              );
             const key = rowKey(r);
             const isSel = key === selected;
             return (

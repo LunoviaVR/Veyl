@@ -196,6 +196,14 @@ pub fn cpu_info() -> (CpuInfo, Vec<String>) {
     let mut info = CpuInfo {
         brand,
         vendor,
+        // Nominal (base) clock as the firmware reports it to Windows.
+        base_mhz: crate::registry::read_dword(
+            crate::registry::HKEY_LOCAL_MACHINE,
+            r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+            "~MHz",
+        )
+        .filter(|&m| m > 0)
+        .map(|m| m as f32),
         ..Default::default()
     };
     match topology() {
@@ -359,6 +367,12 @@ impl Default for CpuSampler {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reports_base_clock() {
+        let mhz = cpu_info().0.base_mhz.expect("base clock");
+        assert!((400.0..10_000.0).contains(&mhz), "{mhz}");
+    }
 
     #[test]
     fn parses_instances() {

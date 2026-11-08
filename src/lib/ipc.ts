@@ -56,6 +56,14 @@ export const api = {
   exportPcSpecs: (format: "txt" | "csv") => call<string | null>("export_pc_specs", { format }),
   clearActiveAlerts: () => call<void>("clear_active_alerts"),
 
+  captureInterfaces: () => call<T.CaptureInterface[]>("get_capture_interfaces"),
+  startPacketCapture: (ifIndex: number | null) => call<void>("start_packet_capture", { ifIndex }),
+  stopPacketCapture: () => call<void>("stop_packet_capture"),
+  clearPackets: () => call<void>("clear_packets"),
+  packets: (afterId: number, filter: string) => call<T.PacketPage>("get_packets", { afterId, filter }),
+  packetDetail: (id: number) => call<T.PacketDetail>("get_packet_detail", { id }),
+  checkPacketFilter: (filter: string) => call<void>("check_packet_filter", { filter }),
+
   settings: () => call<T.Settings>("get_settings"),
   saveSettings: (settings: T.Settings) => call<T.Settings>("save_settings", { settings }),
   resetAlertRules: () => call<T.Settings>("reset_alert_rules"),

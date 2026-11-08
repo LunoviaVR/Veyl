@@ -292,6 +292,7 @@ impl ProcessSampler {
                         timestamp_ms: now_ms,
                         logical_processors: self.logical_processors,
                         rows: vec![],
+                        app_pids: vec![],
                     },
                     self_usage: SelfUsage::default(),
                 };
@@ -382,6 +383,7 @@ impl ProcessSampler {
                 timestamp_ms: now_ms,
                 logical_processors: self.logical_processors,
                 rows,
+                app_pids: crate::app_windows::app_pids(),
             },
             self_usage,
         }

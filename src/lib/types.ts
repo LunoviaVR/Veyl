@@ -110,6 +110,7 @@ export interface DisksSnapshot {
 
 export interface NetworkAdapterSnapshot {
   luid: number;
+  ifIndex: number;
   alias: string;
   description: string;
   media: string;
@@ -193,6 +194,8 @@ export interface ProcessTable {
   timestampMs: number;
   logicalProcessors: number;
   rows: ProcessRow[];
+  /** Processes owning a visible app window (Task Manager's "Apps" group). */
+  appPids: number[];
 }
 
 export type Priority = "idle" | "belowNormal" | "normal" | "aboveNormal" | "high" | "realtime";
@@ -691,4 +694,64 @@ export interface SpecItem {
 export interface SpecSection {
   title: string;
   items: SpecItem[];
+}
+
+export interface CaptureInterface {
+  ifIndex: number;
+  name: string;
+  description: string;
+  media: string;
+  connected: boolean;
+  rateBps: number | null;
+}
+
+export interface PacketRow {
+  id: number;
+  timeUs: number;
+  ifIndex: number;
+  outbound: boolean | null;
+  src: string;
+  dst: string;
+  protocol: string;
+  length: number;
+  info: string;
+}
+
+export interface PacketPage {
+  rows: PacketRow[];
+  lastId: number;
+  more: boolean;
+  oldestId: number;
+  total: number;
+  evicted: number;
+  running: boolean;
+  interface: number | null;
+  error: string | null;
+}
+
+export interface PacketField {
+  key?: string;
+  label: string;
+  value: string;
+  offset: number;
+  len: number;
+}
+
+export interface PacketLayer {
+  proto: string;
+  name: string;
+  summary: string;
+  offset: number;
+  len: number;
+  fields: PacketField[];
+}
+
+export interface PacketDetail {
+  id: number;
+  timeUtc: string;
+  timeUs: number;
+  ifIndex: number;
+  outbound: boolean | null;
+  layers: PacketLayer[];
+  bytes: number[];
 }

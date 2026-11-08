@@ -31,6 +31,8 @@ src/                  React UI     Pages, components, typed IPC wrappers, live s
 | gaming-monitor / frame-capture | `veyl_core::{frames,frame_stats}`, `veyl-windows::presentmon`, `src-tauri/src/gaming.rs` |
 | crash-monitor / event-log-reader | `veyl-windows::eventlog`, `veyl_core::events`, `src-tauri/src/events_watch.rs` |
 | bsod-analyzer | `veyl_core::{events::group_shutdown_incidents, codes}`, `veyl-windows::debugger` |
+| packet-capture | `veyl-windows::packet_capture` (Windows NDIS capture via ETW, no driver installed), `veyl_core::{packet,packet_filter}`, `src-tauri/src/packets.rs` |
+| pc-specs | `veyl_core::specs` (SMBIOS), `veyl-windows::{display,app_windows}` |
 | diagnostic-engine | `veyl_core::diagnostics` |
 | alert-engine | `veyl_core::alerts`, `src-tauri/src/notify.rs` |
 | history-storage | `crates/history-storage` |

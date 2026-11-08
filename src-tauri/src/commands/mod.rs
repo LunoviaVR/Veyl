@@ -8,6 +8,7 @@ pub mod export;
 pub mod gaming;
 pub mod hardware;
 pub mod history;
+pub mod network;
 pub mod processes;
 pub mod settings;
 pub mod stability;

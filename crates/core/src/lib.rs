@@ -14,6 +14,8 @@ pub mod events;
 pub mod frame_stats;
 pub mod frames;
 pub mod model;
+pub mod packet;
+pub mod packet_filter;
 pub mod rate;
 pub mod redact;
 pub mod sensor_map;

@@ -58,8 +58,8 @@ function IncidentDetail({ inc }: { inc: ShutdownIncident }) {
           {inc.evidence.map((e) => (
             <li key={`${e.channel}${e.recordId}`} className="flex gap-3">
               <span className="text-muted tabular w-40 shrink-0">{f.dateTime(e.timeMs)}</span>
-              <span>{e.title}</span>
-              <span className="ml-auto text-faint">{e.channel} #{e.recordId}</span>
+              <span className="min-w-0">{e.title}</span>
+              <span className="ml-auto text-faint whitespace-nowrap shrink-0">{e.channel} #{e.recordId}</span>
             </li>
           ))}
         </ul>

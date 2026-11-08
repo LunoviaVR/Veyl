@@ -14,6 +14,7 @@ npm run tauri dev        # debug build with hot-reloading UI
 npm run tauri build      # release build + NSIS installer
 powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # full quality gate
 cargo run -p veyl-windows --example probe                     # print what every collector reports on this PC
+cargo run -p veyl-windows --example packet_probe              # capture 8 s, decode and filter it (admin or Performance Log Users)
 ```
 
 Environment variables: `VEYL_DATA_DIR` overrides the data folder; `VEYL_LOG`

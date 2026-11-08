@@ -78,6 +78,7 @@ impl NetworkSampler {
                 };
                 snap.adapters.push(NetworkAdapterSnapshot {
                     luid,
+                    if_index: r.InterfaceIndex,
                     alias: from_wide(&r.Alias),
                     description: from_wide(&r.Description),
                     media: media_name(r.Type).into(),

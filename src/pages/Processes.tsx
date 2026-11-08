@@ -2,7 +2,7 @@ import * as CM from "@radix-ui/react-context-menu";
 import { ChevronDown, ChevronRight, Copy, FolderOpen, Info, ListTree, PauseCircle, Skull, Gauge, XCircle } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { useNav } from "../App";
-import { type Column, DataTable, type SortState, sortRows } from "../components/DataTable";
+import { type Column, DataTable, type GroupRow, type SortState, sortRows } from "../components/DataTable";
 import { Badge, Button, cn, ErrorNote, Fields, Modal, PageHeader, SearchInput, StatusNote, Tabs } from "../components/ui";
 import * as f from "../lib/format";
 import { usePref, useQuery } from "../lib/hooks";
@@ -11,6 +11,8 @@ import type { ConnectionRow, Priority, ProcessRow, ServiceInfo, StartupItem } fr
 
 type Tab = "processes" | "services" | "startup" | "connections";
 const key = (r: ProcessRow) => `${r.pid}:${r.startTimeMs ?? "x"}`;
+/** Order used until the user picks a column; in that state apps are grouped first, like Task Manager. */
+const DEFAULT_SORT: SortState = { id: "cpu", desc: true };
 
 const PRIORITIES: { value: Priority; label: string }[] = [
   { value: "idle", label: "Low" },
@@ -53,7 +55,8 @@ function ProcessesTab() {
   const { go } = useNav();
   const table = useQuery(() => api.processes(), [], { intervalMs: 1500 });
   const [search, setSearch] = useState("");
-  const [sort, setSort] = usePref<SortState | null>("procSort", { id: "cpu", desc: true });
+  // null = default order (apps first). A new key so a sort saved by an older version does not hide the grouping.
+  const [sort, setSort] = usePref<SortState | null>("procSortV2", null);
   const [treeMode, setTreeMode] = usePref("procTree", false);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<string | null>(null);
@@ -123,18 +126,23 @@ function ProcessesTab() {
     [treeMode, collapsed],
   );
 
+  const appPids = table.data?.appPids;
   const view = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const flat = (list: ProcessRow[]) => sortRows(list.map((row) => ({ row, depth: 0, hasChildren: false })), columns, sort ?? DEFAULT_SORT);
     if (q || !treeMode) {
       const filtered = q ? rows.filter((r) => r.name.toLowerCase().includes(q) || String(r.pid) === q || r.path?.toLowerCase().includes(q)) : rows;
-      return sortRows(
-        filtered.map((row) => ({ row, depth: 0, hasChildren: false })),
-        columns,
-        sort,
-      );
+      const apps = new Set(appPids);
+      // Grouping applies only to the untouched default view: no search, no column sort.
+      if (q || sort || !apps.size) return flat(filtered);
+      const isApp = filtered.filter((r) => apps.has(r.pid));
+      const rest = filtered.filter((r) => !apps.has(r.pid));
+      const heading = (label: string, n: number): GroupRow => ({ groupHeader: `${label} (${n})`, key: `group:${label}` });
+      return [heading("Apps", isApp.length), ...flat(isApp), heading("Background processes", rest.length), ...flat(rest)];
     }
-    return buildTree(rows, collapsed, (list) => sortRows(list.map((row) => ({ row, depth: 0, hasChildren: false })), columns, sort).map((x) => x.row));
-  }, [rows, search, treeMode, sort, collapsed, columns]);
+    return buildTree(rows, collapsed, (list) => flat(list).map((x) => x.row));
+  }, [rows, appPids, search, treeMode, sort, collapsed, columns]);
+  const processCount = view.filter((x) => !("groupHeader" in x)).length;
 
   const act = async (fn: () => Promise<unknown>, ok: string) => {
     try {
@@ -220,8 +228,13 @@ function ProcessesTab() {
           <ListTree className="size-3.5" /> Tree
         </Button>
         <span className="ml-auto text-muted text-[12px] tabular">
-          {search.trim() ? `${view.length} of ${rows.length}` : rows.length} processes · {f.pct(total, 0)} CPU in use
+          {search.trim() ? `${processCount} of ${rows.length}` : rows.length} processes · {f.pct(total, 0)} CPU in use
         </span>
+        {sort && !treeMode && (
+          <Button variant="ghost" title="Apps first, then background processes, each sorted by CPU" onClick={() => setSort(null)}>
+            Default order
+          </Button>
+        )}
         <Button disabled={!selRow} variant="danger" onClick={() => selRow && setConfirm({ row: selRow, tree: false })}>
           End task
         </Button>
@@ -246,7 +259,7 @@ function ProcessesTab() {
               rows={view}
               columns={columns}
               rowKey={(x) => key(x.row)}
-              sort={sort}
+              sort={sort ?? DEFAULT_SORT}
               onSort={setSort}
               selected={selected}
               onSelect={(k) => setSelected(k)}

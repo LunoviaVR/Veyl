@@ -180,6 +180,7 @@ function SystemTab() {
             ["Packages", f.num(s?.cpu.packages)],
             ["Physical cores", f.num(s?.cpu.physicalCores)],
             ["Logical processors", f.num(s?.cpu.logicalProcessors)],
+            ["Base clock", s?.cpu.baseMhz ? f.mhz(s.cpu.baseMhz) : f.DASH],
             ["Hybrid layout", s?.cpu.performanceCores ? `${s.cpu.performanceCores} performance + ${s.cpu.efficiencyCores} efficiency cores` : "Not hybrid / not reported"],
           ]}
         />

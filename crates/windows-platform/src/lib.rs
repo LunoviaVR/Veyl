@@ -12,6 +12,7 @@
 #![cfg(windows)]
 
 pub mod adlx;
+pub mod app_windows;
 pub mod connections;
 pub mod cpu;
 pub mod debugger;
@@ -25,6 +26,7 @@ pub mod handle;
 pub mod memory;
 pub mod network;
 pub mod nvml;
+pub mod packet_capture;
 pub mod pawnio;
 pub mod pdh;
 pub mod presentmon;

@@ -81,13 +81,14 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn("h-7 px-2 rounded-sm bg-raised border border-line-strong text-[12.5px] focus:outline-none focus:border-accent", props.className)} />;
 }
 
-export function Select<T extends string>({ value, onChange, options, label, className }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[]; label?: string; className?: string }) {
+export function Select<T extends string>({ value, onChange, options, label, className, disabled }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[]; label?: string; className?: string; disabled?: boolean }) {
   return (
     <select
       aria-label={label}
+      disabled={disabled}
       value={value}
       onChange={(e) => onChange(e.target.value as T)}
-      className={cn("h-7 px-2 rounded-sm bg-raised border border-line-strong text-[12.5px] focus:outline-none focus:border-accent", className)}
+      className={cn("h-7 px-2 rounded-sm bg-raised border border-line-strong text-[12.5px] focus:outline-none focus:border-accent disabled:opacity-50", className)}
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

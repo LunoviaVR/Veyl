@@ -231,7 +231,40 @@ pub fn parse_analyze_output(out: &str) -> DumpAnalysis {
             .warnings
             .iter()
             .any(|w| w.to_ascii_lowercase().contains("symbols can not be loaded"));
+    // Without the matching Windows symbols, !analyze substitutes placeholders
+    // ("ntoskrnl.wrong.symbols.exe", WRONG_SYMBOLS_…) that name no real module.
+    if [
+        &a.failure_bucket,
+        &a.image_name,
+        &a.module_name,
+        &a.symbol_name,
+    ]
+    .into_iter()
+    .any(is_wrong_symbols)
+    {
+        for f in [
+            &mut a.image_name,
+            &mut a.module_name,
+            &mut a.symbol_name,
+            &mut a.process_name,
+        ] {
+            if is_wrong_symbols(f) {
+                *f = None;
+            }
+        }
+        a.symbols_resolved = false;
+        a.warnings.insert(0, WRONG_SYMBOLS_NOTE.into());
+    }
     a
+}
+
+const WRONG_SYMBOLS_NOTE: &str = "Windows symbol files for this build were not available, so the debugger could not name the faulting module. Turn on the Microsoft symbol server in Settings and analyze again.";
+
+fn is_wrong_symbols(v: &Option<String>) -> bool {
+    v.as_deref().is_some_and(|s| {
+        let l = s.to_ascii_lowercase();
+        l.contains("wrong_symbols") || l.contains("wrong.symbols")
+    })
 }
 
 /// Runs `cdb -z <dump> -c "!analyze -v; q"` and parses the result.
@@ -327,6 +360,34 @@ pub fn analyze(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// What cdb printed for a real minidump on this PC without the symbol server.
+    #[test]
+    fn wrong_symbols_are_not_reported_as_the_cause() {
+        let out = "BUGCHECK_CODE:  13a
+BUGCHECK_P1: 11
+PROCESS_NAME:  ntoskrnl.wrong.symbols.exe
+SYMBOL_NAME:  nt_wrong_symbols!AFF6531F1450000
+MODULE_NAME: nt_wrong_symbols
+IMAGE_NAME:  ntoskrnl.wrong.symbols.exe
+FAILURE_BUCKET_ID:  WRONG_SYMBOLS_X64_10.0.26100.9711_nt_wrong_symbols!AFF6531F1450000
+";
+        let a = parse_analyze_output(out);
+        assert_eq!(a.bugcheck_code, Some(0x13a));
+        assert_eq!(
+            (a.image_name, a.module_name, a.symbol_name, a.process_name),
+            (None, None, None, None)
+        );
+        assert!(!a.symbols_resolved);
+        assert_eq!(
+            a.warnings.first().map(String::as_str),
+            Some(WRONG_SYMBOLS_NOTE)
+        );
+        assert!(
+            a.failure_bucket.is_some(),
+            "the raw bucket stays visible in the full output"
+        );
+    }
 
     const SAMPLE: &str = "\
 *******************************************************************************

@@ -315,7 +315,8 @@ pub fn sections(i: &SpecsInput) -> Vec<SpecSection> {
         "Base clock",
         c.base_mhz
             .filter(|&m| m > 0.0)
-            .map(|m| format!("{:.2} GHz", m / 1000.0)),
+            // The registry value is measured and reads slightly low (3494 for 3.5 GHz); bases are 50 MHz steps.
+            .map(|m| format!("{:.2} GHz", (m / 50.0).round() * 50.0 / 1000.0)),
     );
     for (lvl, bytes) in i.caches.iter().enumerate() {
         s.add(format!("L{} cache", lvl + 1), bytes.map(binary));
@@ -432,13 +433,18 @@ pub fn sections(i: &SpecsInput) -> Vec<SpecSection> {
 
     let mut s = Section::default();
     for a in i.adapters {
-        let speed = a.link_speed_bps.filter(|_| a.connected).map(|b| {
-            if b >= 1_000_000_000 {
-                format!("{} Gbit/s", b as f64 / 1e9)
-            } else {
-                format!("{} Mbit/s", b / 1_000_000)
-            }
-        });
+        // link_speed_bps is bytes per second, like every rate in the model.
+        let speed = a
+            .link_speed_bps
+            .filter(|_| a.connected)
+            .map(|bytes| bytes * 8)
+            .map(|b| {
+                if b >= 1_000_000_000 {
+                    format!("{} Gbit/s", b as f64 / 1e9)
+                } else {
+                    format!("{} Mbit/s", b / 1_000_000)
+                }
+            });
         s.add(
             a.alias.clone(),
             join([
@@ -580,7 +586,7 @@ mod tests {
                 logical_processors: Some(32),
                 performance_cores: Some(8),
                 efficiency_cores: Some(16),
-                base_mhz: Some(3200.0),
+                base_mhz: Some(3194.0),
                 ..Default::default()
             },
             gpus: vec![GpuInfo {
@@ -605,7 +611,14 @@ mod tests {
             gpu_drivers: &[("L1".into(), "32.0.15.6094".into())],
             displays: &displays,
             drives: &[],
-            adapters: &[],
+            adapters: &[NetworkAdapterSnapshot {
+                alias: "Ethernet 2".into(),
+                description: "Intel(R) Ethernet Controller I226-V".into(),
+                media: "Ethernet".into(),
+                connected: true,
+                link_speed_bps: Some(312_500_000),
+                ..Default::default()
+            }],
         });
         let get = |sec: &str, label: &str| {
             out.iter()
@@ -619,6 +632,10 @@ mod tests {
             Some("24 (8 performance + 16 efficiency)")
         );
         assert_eq!(get("Processor", "Base clock"), Some("3.20 GHz"));
+        assert_eq!(
+            get("Network", "Ethernet 2"),
+            Some("Intel(R) Ethernet Controller I226-V · Ethernet · 2.5 Gbit/s")
+        );
         assert_eq!(get("Processor", "L3 cache"), Some("36 MB"));
         assert_eq!(get("Processor", "L1 cache"), Some("2.1 MB"));
         assert_eq!(get("Memory", "Installed"), Some("48 GB (47.5 GB usable)"));
