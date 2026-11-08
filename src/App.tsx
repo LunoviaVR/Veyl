@@ -22,9 +22,9 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { Button, cn } from "./components/ui";
 import { usePref, useQuery } from "./lib/hooks";
-import { api, errorText } from "./lib/ipc";
+import { api } from "./lib/ipc";
 import { startLive, useLive } from "./lib/live";
-import type { Settings } from "./lib/types";
+import { knownUpdate, type Settings } from "./lib/types";
 import Alerts from "./pages/Alerts";
 import Bsod from "./pages/Bsod";
 import Crashes from "./pages/Crashes";
@@ -124,10 +124,9 @@ export default function App() {
   const settings = useQuery(() => api.settings(), [], { events: ["settings-changed"] });
   const alerts = useQuery(() => api.activeAlerts(), [], { intervalMs: 5000, events: ["alert"] });
   const hasFrame = useLive((s) => s.frame !== null);
-  const update = useQuery(() => api.updateStatus(), [], { events: ["update-available"], intervalMs: 600_000 });
+  const update = useQuery(() => api.updateStatus(), [], { events: ["update-status"], intervalMs: 600_000 });
   const [updateDismissed, setUpdateDismissed] = useState<string | null>(null);
-  const [installing, setInstalling] = useState(false);
-  const [updateError, setUpdateError] = useState<string | null>(null);
+  const known = knownUpdate(update.data);
 
   useEffect(() => {
     startLive().catch(() => undefined);
@@ -205,29 +204,18 @@ export default function App() {
           </div>
         </nav>
         <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
-          {update.data?.available && updateDismissed !== update.data.available.version && (
+          {update.data && known && updateDismissed !== known.version && (
             <div className="px-5 py-1.5 text-[12.5px] border-b border-line bg-accent/8 flex items-center gap-3" role="status">
               <Download className="size-3.5 text-accent" />
               <span>
-                Veyl {update.data.available.version} is available (you have {update.data.currentVersion}).
+                Veyl {known.version} is available (you have {update.data.currentVersion}).
               </span>
-              {updateError && <span className="text-bad">{updateError}</span>}
-              <Button
-                variant="primary"
-                className="ml-auto"
-                disabled={installing}
-                onClick={() => {
-                  setInstalling(true);
-                  setUpdateError(null);
-                  api.installUpdate().catch((e) => {
-                    setUpdateError(errorText(e));
-                    setInstalling(false);
-                  });
-                }}
-              >
-                {installing ? "Installing…" : "Install and restart"}
+              {update.data.state === "failed" && <span className="text-bad">{update.data.error}</span>}
+              {/* The outcome arrives as the next update state, so errors need no handling here. */}
+              <Button variant="primary" className="ml-auto" disabled={update.data.state === "installing"} onClick={() => api.installUpdate().catch(() => undefined)}>
+                {update.data.state === "installing" ? "Installing…" : "Install and restart"}
               </Button>
-              <Button variant="ghost" onClick={() => setUpdateDismissed(update.data!.available!.version)}>
+              <Button variant="ghost" onClick={() => setUpdateDismissed(known.version)}>
                 Later
               </Button>
             </div>

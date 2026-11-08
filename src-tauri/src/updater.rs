@@ -5,6 +5,9 @@
 //! matching private key; an update whose signature does not verify is refused by
 //! the plugin. Checks run only when "Check for updates automatically" is on, or
 //! when the user presses "Check now". Installing is always a user action.
+//!
+//! The updater is one state machine ([`UpdateState`]); every change is emitted as
+//! `update-status`, so the banner and Settings always show the same thing.
 
 use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
@@ -19,7 +22,7 @@ use crate::state::{now_ms, AppState};
 const FIRST_CHECK_DELAY: Duration = Duration::from_secs(20);
 const CHECK_EVERY: Duration = Duration::from_secs(12 * 3600);
 
-#[derive(Serialize, Clone, Debug, Default)]
+#[derive(Serialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateInfo {
     pub version: String,
@@ -27,22 +30,82 @@ pub struct UpdateInfo {
     pub date: Option<String>,
 }
 
+/// ```text
+/// NotChecked ─check→ Checking ─→ UpToDate | Available | Failed
+/// Available ─install→ Installing ─→ (restart) | Failed{update}
+/// Failed{update: Some} can be installed again; any state but Installing can be re-checked.
+/// ```
+#[derive(Serialize, Clone, Debug, Default, PartialEq)]
+#[serde(rename_all = "camelCase", tag = "state")]
+pub enum UpdateState {
+    #[default]
+    NotChecked,
+    Checking,
+    UpToDate,
+    Available {
+        update: UpdateInfo,
+    },
+    Installing {
+        update: UpdateInfo,
+    },
+    /// A check or install failed. A known update is kept so it can still be installed.
+    Failed {
+        error: String,
+        update: Option<UpdateInfo>,
+    },
+}
+
+impl UpdateState {
+    /// The update this state knows about, if any.
+    pub fn update(&self) -> Option<&UpdateInfo> {
+        match self {
+            Self::Available { update } | Self::Installing { update } => Some(update),
+            Self::Failed { update, .. } => update.as_ref(),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Serialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateStatus {
     pub current_version: String,
-    pub available: Option<UpdateInfo>,
     pub last_check_ms: Option<i64>,
-    pub last_error: Option<String>,
-    pub installing: bool,
+    #[serde(flatten)]
+    pub state: UpdateState,
 }
 
 /// Shared update state (managed by Tauri).
 #[derive(Default)]
 pub struct Updates(pub Mutex<UpdateStatus>);
 
-/// Checks the release endpoint once and records the result.
+/// Sets the state and tells every view.
+fn set(app: &AppHandle, f: impl FnOnce(&mut UpdateStatus)) -> UpdateStatus {
+    let updates = app.state::<Updates>();
+    let snapshot = {
+        let mut s = updates.0.lock();
+        f(&mut s);
+        s.current_version = app.package_info().version.to_string();
+        s.clone()
+    };
+    let _ = app.emit("update-status", &snapshot); // the UI may not be listening
+    snapshot
+}
+
+/// Checks the release endpoint once and records the result. Skipped while installing.
 pub async fn check(app: &AppHandle) -> UpdateStatus {
+    let mut known = None;
+    let mut busy = false;
+    set(app, |s| match &s.state {
+        UpdateState::Installing { .. } | UpdateState::Checking => busy = true,
+        other => {
+            known = other.update().cloned();
+            s.state = UpdateState::Checking;
+        }
+    });
+    if busy {
+        return app.state::<Updates>().0.lock().clone();
+    }
     let result = match app.updater() {
         Ok(u) => u.check().await.map_err(|e| match e {
             // Also what a missing latest.json (no release published yet) looks like.
@@ -53,61 +116,64 @@ pub async fn check(app: &AppHandle) -> UpdateStatus {
         }),
         Err(e) => Err(e.to_string()),
     };
-    let updates = app.state::<Updates>();
-    let mut s = updates.0.lock();
-    s.current_version = app.package_info().version.to_string();
-    s.last_check_ms = Some(now_ms());
-    match result {
-        Ok(Some(u)) => {
-            let fresh = s
-                .available
-                .as_ref()
-                .map(|a| a.version != u.version)
-                .unwrap_or(true);
-            s.available = Some(UpdateInfo {
+    let next = match result {
+        Ok(Some(u)) => UpdateState::Available {
+            update: UpdateInfo {
                 version: u.version.clone(),
                 notes: u.body.clone(),
                 date: u.date.map(|d| d.to_string()),
-            });
-            s.last_error = None;
-            if fresh {
-                let _ = app.emit("update-available", &s.available); // the UI may not be listening
-                if app
-                    .state::<AppState>()
-                    .settings
-                    .read()
-                    .notifications_enabled
-                {
-                    crate::notify::toast(
-                        app,
-                        "Update available",
-                        &format!("Veyl {} is ready to install.", u.version),
-                    );
-                }
+            },
+        },
+        Ok(None) => UpdateState::UpToDate,
+        Err(error) => {
+            tracing::info!("update check failed: {error}");
+            UpdateState::Failed {
+                error,
+                update: known.clone(),
             }
         }
-        Ok(None) => {
-            s.available = None;
-            s.last_error = None;
-        }
-        Err(e) => {
-            tracing::info!("update check failed: {e}");
-            s.last_error = Some(e);
+    };
+    let fresh = matches!(&next, UpdateState::Available { update } if known.as_ref().map(|k| &k.version) != Some(&update.version));
+    let status = set(app, |s| {
+        s.last_check_ms = Some(now_ms());
+        s.state = next;
+    });
+    if fresh
+        && app
+            .state::<AppState>()
+            .settings
+            .read()
+            .notifications_enabled
+    {
+        if let Some(u) = status.state.update() {
+            crate::notify::toast(
+                app,
+                "Update available",
+                &format!("Veyl {} is ready to install.", u.version),
+            );
         }
     }
-    s.clone()
+    status
 }
 
-/// Downloads, verifies and installs the available update, then restarts.
+/// Downloads, verifies and installs the known update, then restarts.
 pub async fn install(app: &AppHandle) -> Result<(), String> {
-    let updates = app.state::<Updates>();
-    {
-        let mut s = updates.0.lock();
-        if s.installing {
-            return Err("An update is already being installed".into());
-        }
-        s.installing = true;
+    let mut chosen = None;
+    let mut refusal = None;
+    set(app, |s| match &s.state {
+        UpdateState::Installing { .. } => refusal = Some("An update is already being installed"),
+        other => match other.update().cloned() {
+            Some(update) => {
+                chosen = Some(update.clone());
+                s.state = UpdateState::Installing { update };
+            }
+            None => refusal = Some("No update is available"),
+        },
+    });
+    if let Some(r) = refusal {
+        return Err(r.into());
     }
+    let update_info = chosen.unwrap_or_default();
     let result: Result<(), String> = async {
         let updater = app.updater().map_err(|e| e.to_string())?;
         let update = updater
@@ -122,8 +188,15 @@ pub async fn install(app: &AppHandle) -> Result<(), String> {
             .map_err(|e| format!("Update failed: {e}"))
     }
     .await;
-    updates.0.lock().installing = false;
-    result?;
+    if let Err(error) = result {
+        set(app, |s| {
+            s.state = UpdateState::Failed {
+                error: error.clone(),
+                update: Some(update_info),
+            }
+        });
+        return Err(error);
+    }
     // The NSIS installer has replaced the files; restart into the new version.
     app.restart();
 }
@@ -146,5 +219,48 @@ pub fn run(app: AppHandle) {
         } else if due {
             last = Some(Instant::now());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn info(v: &str) -> UpdateInfo {
+        UpdateInfo {
+            version: v.into(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn known_update_survives_failures_and_serializes_flat() {
+        assert_eq!(
+            UpdateState::Available {
+                update: info("0.2.0")
+            }
+            .update(),
+            Some(&info("0.2.0"))
+        );
+        assert_eq!(
+            UpdateState::Failed {
+                error: "offline".into(),
+                update: Some(info("0.2.0"))
+            }
+            .update(),
+            Some(&info("0.2.0"))
+        );
+        assert_eq!(UpdateState::UpToDate.update(), None);
+        let json = serde_json::to_value(UpdateStatus {
+            current_version: "0.1.0".into(),
+            last_check_ms: Some(5),
+            state: UpdateState::Installing {
+                update: info("0.2.0"),
+            },
+        })
+        .expect("serialize");
+        assert_eq!(json["state"], "installing");
+        assert_eq!(json["update"]["version"], "0.2.0");
+        assert_eq!(json["currentVersion"], "0.1.0");
     }
 }

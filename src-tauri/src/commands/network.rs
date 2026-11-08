@@ -8,7 +8,7 @@ use veyl_core::time::{filetime_to_unix_ms, format_iso8601_utc_ms};
 use veyl_windows::packet_capture::session_losses;
 
 use super::CmdResult;
-use crate::packets::{Capture, PacketRow, PAGE};
+use crate::packets::{Capture, CaptureState, PacketRow, PAGE};
 use crate::state::AppState;
 
 #[derive(Serialize)]
@@ -73,13 +73,13 @@ pub struct PacketPage {
     pub oldest_id: u64,
     pub total: usize,
     pub evicted: u64,
-    pub running: bool,
+    #[serde(flatten)]
+    pub capture: CaptureState,
     /// Interface the current capture keeps (`None` = all).
     pub interface: Option<u32>,
     /// Events and buffers Windows dropped because the capture fell behind.
     pub lost_events: u64,
     pub lost_buffers: u64,
-    pub error: Option<String>,
 }
 
 /// Packets after `after_id` that match `filter` (a display filter; empty = all).
@@ -121,8 +121,8 @@ pub fn get_packets(
             ids.push(*id);
         }
     }
-    let running = capture.is_running();
-    if running {
+    let state = capture.state();
+    if state == CaptureState::Capturing {
         if let Some(l) = session_losses() {
             *capture.lost.lock() = l;
         }
@@ -142,11 +142,10 @@ pub fn get_packets(
         oldest_id: first,
         total: s.packets.len(),
         evicted: s.evicted,
-        running,
+        capture: state,
         interface: s.interface,
         lost_events,
         lost_buffers,
-        error: capture.error.lock().clone(),
     })
 }
 

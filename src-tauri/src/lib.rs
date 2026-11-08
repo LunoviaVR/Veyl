@@ -220,6 +220,11 @@ fn shutdown(app: &AppHandle) {
 }
 
 pub fn run() {
+    // Started by "Restart as administrator": let the old instance finish exiting first.
+    let mut args = std::env::args().skip_while(|a| a != veyl_windows::elevation::WAIT_PID_ARG);
+    if let Some(pid) = args.nth(1).and_then(|p| p.parse().ok()) {
+        veyl_windows::elevation::wait_for_exit(pid, 15_000);
+    }
     let app = tauri::Builder::default()
         // Must be first: a second launch focuses the running instance instead of starting another monitor.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {

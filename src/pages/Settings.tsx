@@ -6,7 +6,7 @@ import * as f from "../lib/format";
 import { useQuery } from "../lib/hooks";
 import { api, errorText } from "../lib/ipc";
 import { useLive } from "../lib/live";
-import type { OverlaySettings, Settings as S } from "../lib/types";
+import { knownUpdate, type OverlaySettings, type Settings as S } from "../lib/types";
 
 function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
   return (
@@ -40,14 +40,15 @@ export default function Settings() {
   const { settings, refreshSettings } = useNav();
   const status = useQuery(() => api.runtimeStatus(), [], { intervalMs: 10_000 });
   const self = useLive((s) => s.frame?.selfUsage);
-  const upd = useQuery(() => api.updateStatus(), [], { events: ["update-available"] });
+  const upd = useQuery(() => api.updateStatus(), [], { events: ["update-status"] });
+  const u = upd.data;
+  const known = knownUpdate(u);
   const [d, setDraft] = useState<S | null>(null);
   // Stored settings the unsaved edits started from (null = no unsaved edits).
   const base = useRef<S | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [redact, setRedact] = useState(true);
-  const [checking, setChecking] = useState(false);
   // Follow settings changed elsewhere (tray, Gaming, Alerts), but never overwrite unsaved edits.
   useEffect(() => {
     if (settings && !base.current) {
@@ -207,30 +208,29 @@ export default function Settings() {
           </Row>
           <Row label="Status">
             <span className="text-[12.5px] text-muted">
-              Version {upd.data?.currentVersion ?? f.DASH}
-              {upd.data?.available ? ` · ${upd.data.available.version} available` : upd.data?.lastError ? " · last check failed" : upd.data?.lastCheckMs ? " · up to date" : ""}
-              {upd.data?.lastCheckMs ? ` · checked ${f.relative(upd.data.lastCheckMs)}` : " · not checked yet"}
+              Version {u?.currentVersion ?? f.DASH}
+              {u &&
+                {
+                  notChecked: " · not checked yet",
+                  checking: " · checking…",
+                  upToDate: " · up to date",
+                  available: ` · ${known?.version} available`,
+                  installing: ` · installing ${known?.version}…`,
+                  failed: known ? ` · ${known.version} available · last attempt failed` : " · last check failed",
+                }[u.state]}
+              {u?.lastCheckMs ? ` · checked ${f.relative(u.lastCheckMs)}` : ""}
             </span>
-            <Button
-              disabled={checking}
-              onClick={() => {
-                setChecking(true);
-                api
-                  .checkForUpdate()
-                  .then(() => upd.refresh())
-                  .catch((e) => setError(errorText(e)))
-                  .finally(() => setChecking(false));
-              }}
-            >
-              {checking ? "Checking…" : "Check now"}
+            {/* Progress and errors arrive as the next update state. */}
+            <Button disabled={u?.state === "checking" || u?.state === "installing"} onClick={() => api.checkForUpdate().catch((e) => setError(errorText(e)))}>
+              {u?.state === "checking" ? "Checking…" : "Check now"}
             </Button>
-            {upd.data?.available && (
-              <Button variant="primary" onClick={() => api.installUpdate().catch((e) => setError(errorText(e)))}>
-                Install {upd.data.available.version} and restart
+            {known && (
+              <Button variant="primary" disabled={u?.state === "installing"} onClick={() => api.installUpdate().catch(() => undefined)}>
+                {u?.state === "installing" ? "Installing…" : `Install ${known.version} and restart`}
               </Button>
             )}
           </Row>
-          {upd.data?.lastError && <p className="text-[12px] text-muted">Last check: {upd.data.lastError}</p>}
+          {u?.state === "failed" && <p className="text-[12px] text-muted">Last attempt: {u.error}</p>}
         </Panel>
 
         <Panel title="Privacy and export">

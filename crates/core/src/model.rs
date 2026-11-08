@@ -244,6 +244,7 @@ pub struct NetworkAdapterSnapshot {
     pub description: String,
     pub media: String,
     pub connected: bool,
+    /// Link speed in bytes per second, like every rate in this model (the UI converts to bits).
     pub link_speed_bps: Option<u64>,
     pub rx_bps: Option<f64>,
     pub tx_bps: Option<f64>,

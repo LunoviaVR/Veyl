@@ -678,13 +678,25 @@ export interface TreeResult {
   failed: [number, string, string][];
 }
 
-export interface UpdateStatus {
-  currentVersion: string;
-  available: { version: string; notes: string | null; date: string | null } | null;
-  lastCheckMs: N;
-  lastError: string | null;
-  installing: boolean;
+export interface UpdateInfo {
+  version: string;
+  notes: string | null;
+  date: string | null;
 }
+
+/** The updater's one state (see src-tauri/src/updater.rs for the transitions). */
+export type UpdateState =
+  | { state: "notChecked" }
+  | { state: "checking" }
+  | { state: "upToDate" }
+  | { state: "available"; update: UpdateInfo }
+  | { state: "installing"; update: UpdateInfo }
+  | { state: "failed"; error: string; update: UpdateInfo | null };
+
+export type UpdateStatus = { currentVersion: string; lastCheckMs: N } & UpdateState;
+
+/** The update a state knows about (installable unless already installing). */
+export const knownUpdate = (s: UpdateState | undefined): UpdateInfo | null => (s && "update" in s ? s.update : null);
 
 export interface SpecItem {
   label: string;
@@ -717,19 +729,20 @@ export interface PacketRow {
   info: string;
 }
 
-export interface PacketPage {
+export type PacketPage = {
   rows: PacketRow[];
   lastId: number;
   more: boolean;
   oldestId: number;
   total: number;
   evicted: number;
-  running: boolean;
   interface: number | null;
   lostEvents: number;
   lostBuffers: number;
-  error: string | null;
-}
+} & CaptureState;
+
+/** Packet capture phase (see src-tauri/src/packets.rs for the transitions). */
+export type CaptureState = { state: "idle" } | { state: "capturing" } | { state: "stopped" } | { state: "failed"; error: string };
 
 export interface PacketField {
   key?: string;

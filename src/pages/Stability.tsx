@@ -105,7 +105,7 @@ function AroundModal({ e, onClose }: { e: StabilityEvent; onClose: () => void })
 }
 
 export default function Stability() {
-  const { params } = useNav();
+  const { params, settings } = useNav();
   const [range, setRange] = usePref("stabRange", "30");
   const [filter, setFilter] = usePref("stabFilter", "failures");
   const [open, setOpen] = useState<StabilityEvent | null>(null);
@@ -148,7 +148,7 @@ export default function Stability() {
         title="Stability"
         subtitle="Windows reliability events, unexpected shutdowns and hardware errors, with diagnostic findings drawn from recorded evidence"
         actions={
-          <Button onClick={() => api.exportEventsCsv(now - days * DAY, now + DAY, true).catch((e) => setError(errorText(e)))}>
+          <Button onClick={() => api.exportEventsCsv(now - days * DAY, now + DAY, settings?.exportRedactDefault ?? true).catch((e) => setError(errorText(e)))}>
             <Download className="size-3.5" /> Export CSV
           </Button>
         }

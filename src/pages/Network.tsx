@@ -5,7 +5,7 @@ import { Button, cn, Empty, ErrorNote, PageHeader, Select, TextInput } from "../
 import * as f from "../lib/format";
 import { usePref, useQuery } from "../lib/hooks";
 import { api, errorText } from "../lib/ipc";
-import type { PacketDetail, PacketField, PacketRow } from "../lib/types";
+import type { CaptureState, PacketDetail, PacketField, PacketRow } from "../lib/types";
 
 const PRESETS: { label: string; filter: string }[] = [
   { label: "DNS", filter: "dns" },
@@ -104,7 +104,7 @@ export default function Network() {
   const ifaces = useQuery(() => api.captureInterfaces(), [], { intervalMs: 5000 });
   const [iface, setIface] = useState<string | null>(null); // "" = all interfaces
   const [rows, setRows] = useState<PacketRow[]>([]);
-  const [status, setStatus] = useState<{ total: number; evicted: number; running: boolean; lost: number; error: string | null } | null>(null);
+  const [status, setStatus] = useState<{ total: number; evicted: number; phase: CaptureState["state"]; lost: number; error: string | null } | null>(null);
   // Kept across page switches and restarts, like Wireshark's last filter.
   const [applied, setApplied] = usePref("packetFilter", "");
   const [draft, setDraft] = useState(applied);
@@ -143,9 +143,9 @@ export default function Network() {
         if (g !== gen.current) return;
         after.current = p.lastId;
         more = p.more;
-        setStatus({ total: p.total, evicted: p.evicted, running: p.running, lost: p.lostEvents + p.lostBuffers, error: p.error });
+        setStatus({ total: p.total, evicted: p.evicted, phase: p.state, lost: p.lostEvents + p.lostBuffers, error: p.state === "failed" ? p.error : null });
         // While capturing, the picker shows the interface actually being captured.
-        if (p.running) setIface(p.interface == null ? "" : String(p.interface));
+        if (p.state === "capturing") setIface(p.interface == null ? "" : String(p.interface));
         setRows((prev) => {
           const kept = prev.length && prev[0]!.id < p.oldestId ? prev.filter((r) => r.id >= p.oldestId) : prev;
           return p.rows.length ? kept.concat(p.rows) : kept;
@@ -164,7 +164,7 @@ export default function Network() {
     void poll();
   }, [poll]);
 
-  const running = status?.running ?? false;
+  const running = status?.phase === "capturing";
   useEffect(() => {
     if (!running) return;
     const t = setInterval(() => void poll(), 700);
@@ -274,7 +274,7 @@ export default function Network() {
             </button>
           ))}
           <span className="ml-auto text-muted tabular">
-            {running ? <span className="text-ok">● Capturing</span> : "Stopped"} · {f.num(status?.total ?? 0)} packets
+            {running ? <span className="text-ok">● Capturing</span> : status?.phase === "failed" ? <span className="text-bad">Failed</span> : status?.phase === "stopped" ? "Stopped" : "Ready"} · {f.num(status?.total ?? 0)} packets
             {applied && ` · ${f.num(rows.length)} match`}
             {!!status?.evicted && ` · ${f.num(status.evicted)} oldest dropped (memory limit)`}
             {!!status?.lost && <span className="text-warn" title="Windows discarded capture data because the capture could not keep up; some packets are missing."> · packets missed by the capture</span>}

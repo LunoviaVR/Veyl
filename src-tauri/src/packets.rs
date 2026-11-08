@@ -136,11 +136,33 @@ impl Store {
     }
 }
 
+/// ```text
+/// Idle ─start→ Capturing ─stop, or the session ends on its own→ Stopped
+///   └─────────── start fails→ Failed      (start works from every phase)
+/// ```
+#[derive(Default)]
+enum Phase {
+    #[default]
+    Idle,
+    Capturing(PacketCapture),
+    Stopped,
+    Failed(String),
+}
+
+/// The capture phase as the UI and agents see it.
+#[derive(Serialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", tag = "state")]
+pub enum CaptureState {
+    Idle,
+    Capturing,
+    Stopped,
+    Failed { error: String },
+}
+
 #[derive(Default)]
 pub struct Capture {
     pub store: Arc<Mutex<Store>>,
-    pub running: Mutex<Option<PacketCapture>>,
-    pub error: Mutex<Option<String>>,
+    phase: Mutex<Phase>,
     /// (events, buffers) Windows dropped during the current capture.
     pub lost: Mutex<(u64, u64)>,
 }
@@ -149,29 +171,44 @@ impl Capture {
     pub fn start(&self, interface: Option<u32>) -> Result<(), String> {
         self.stop();
         self.store.lock().reset(interface);
-        *self.error.lock() = None;
         *self.lost.lock() = (0, 0);
         let store = self.store.clone();
-        let cap = PacketCapture::start(Box::new(move |p| store.lock().push(p)))
-            .inspect_err(|e| *self.error.lock() = Some(e.clone()))?;
-        *self.running.lock() = Some(cap);
-        Ok(())
+        let (next, result) = match PacketCapture::start(Box::new(move |p| store.lock().push(p))) {
+            Ok(c) => (Phase::Capturing(c), Ok(())),
+            Err(e) => (Phase::Failed(e.clone()), Err(e)),
+        };
+        *self.phase.lock() = next;
+        result
     }
 
     /// Stops capturing; the packets stay until cleared or the next capture starts.
     pub fn stop(&self) {
-        // Taken out first: stopping joins the capture thread, which may be waiting on the store lock.
-        let cap = self.running.lock().take();
-        if let Some(c) = cap {
+        let running = {
+            let mut phase = self.phase.lock();
+            match std::mem::take(&mut *phase) {
+                Phase::Capturing(c) => {
+                    *phase = Phase::Stopped;
+                    Some(c)
+                }
+                other => {
+                    *phase = other;
+                    None
+                }
+            }
+        };
+        // Outside the lock: stopping joins the capture thread.
+        if let Some(c) = running {
             c.stop();
         }
     }
 
-    pub fn is_running(&self) -> bool {
-        self.running
-            .lock()
-            .as_ref()
-            .is_some_and(PacketCapture::is_active)
+    pub fn state(&self) -> CaptureState {
+        match &*self.phase.lock() {
+            Phase::Idle => CaptureState::Idle,
+            Phase::Capturing(c) if c.is_active() => CaptureState::Capturing,
+            Phase::Capturing(_) | Phase::Stopped => CaptureState::Stopped,
+            Phase::Failed(e) => CaptureState::Failed { error: e.clone() },
+        }
     }
 }
 
@@ -188,6 +225,23 @@ mod tests {
             orig_len: len as u32,
             data: vec![0; len],
         }
+    }
+
+    #[test]
+    fn stopping_without_a_capture_changes_nothing() {
+        let c = Capture::default();
+        assert_eq!(c.state(), CaptureState::Idle);
+        c.stop();
+        assert_eq!(
+            c.state(),
+            CaptureState::Idle,
+            "only a running capture becomes Stopped"
+        );
+        assert_eq!(
+            serde_json::to_value(CaptureState::Failed { error: "x".into() }).expect("json")
+                ["state"],
+            "failed"
+        );
     }
 
     #[test]

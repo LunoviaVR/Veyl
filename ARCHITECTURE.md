@@ -108,6 +108,23 @@ log handles, mapped views, process handles).
 - The XPath queries sent to the Event Log service are generated from the same rule
   table the classifier uses (`xpath_for_channel`).
 
+## State machines
+
+Lifecycles that the UI shows are one enum each, serialized with a `state` tag, so
+the backend, every page and any agent reading the IPC see the same state and
+impossible combinations cannot exist. Each enum's doc comment draws its transitions.
+
+| Lifecycle | Rust | TypeScript | States |
+|---|---|---|---|
+| Updates | `updater::UpdateState` (event `update-status` on every change) | `UpdateState`, `knownUpdate()` | notChecked, checking, upToDate, available, installing, failed (keeps a known update) |
+| Packet capture | `packets::Phase` / `packets::CaptureState` | `CaptureState` in `PacketPage` | idle, capturing, stopped, failed |
+| Dump analysis | — (one request) | `Analysis` in `pages/Bsod.tsx` | idle, running, done, failed (both name their dump) |
+
+Deliberately left as they are: the alert rule state in `veyl_core::alerts` (pending →
+active → cooldown, covered by tests), PresentMon's reader flags (mapped to one status
+in `presentmon::poll`), the game-capture snapshot (`gaming::GamingLive`, shared with
+the overlay) and form drafts (dirty tracking per page).
+
 ## Security boundaries
 
 - The app runs `asInvoker`. Elevation happens only through an explicit

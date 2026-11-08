@@ -2,7 +2,10 @@
 
 use windows::Win32::Foundation::HANDLE;
 use windows::Win32::Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY};
-use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
+use windows::Win32::System::Threading::{
+    GetCurrentProcess, GetCurrentProcessId, OpenProcess, OpenProcessToken, WaitForSingleObject,
+    PROCESS_SYNCHRONIZE,
+};
 use windows::Win32::UI::Shell::{ShellExecuteExW, SHELLEXECUTEINFOW};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetWindowThreadProcessId, SW_SHOWNORMAL,
@@ -52,6 +55,19 @@ pub fn may_execute(p: &Path) -> bool {
     !is_elevated() || in_admin_only_folder(p)
 }
 
+/// Command-line flag `relaunch_elevated` passes to the new instance.
+pub const WAIT_PID_ARG: &str = "--wait-pid";
+
+/// Blocks until process `pid` has exited, at most `timeout_ms`.
+pub fn wait_for_exit(pid: u32, timeout_ms: u32) {
+    // SAFETY: SYNCHRONIZE-only handle, owned below; a PID that is already gone just fails to open.
+    if let Ok(h) = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, false, pid) } {
+        let h = OwnedHandle(h);
+        // SAFETY: valid process handle.
+        unsafe { WaitForSingleObject(h.raw(), timeout_ms) };
+    }
+}
+
 /// True when this process runs with an elevated (administrator) token.
 pub fn is_elevated() -> bool {
     let mut token = HANDLE::default();
@@ -78,9 +94,13 @@ pub fn is_elevated() -> bool {
 /// Starts a new elevated instance of this executable through the UAC prompt.
 /// The caller exits the current instance after this returns `Ok`.
 /// `arg` is a fixed flag chosen by the caller, never user input.
-pub fn relaunch_elevated(arg: &'static str) -> Result<(), String> {
+pub fn relaunch_elevated() -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|e| format!("cannot locate executable: {e}"))?;
-    let (verb, file, params) = (wide("runas"), wide(&exe.to_string_lossy()), wide(arg));
+    // The new instance waits for this one to exit; otherwise the single-instance check
+    // would find this one still shutting down, hand over to it and quit.
+    // SAFETY: no preconditions.
+    let arg = format!("{WAIT_PID_ARG} {}", unsafe { GetCurrentProcessId() });
+    let (verb, file, params) = (wide("runas"), wide(&exe.to_string_lossy()), wide(&arg));
     let mut info = SHELLEXECUTEINFOW {
         cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
         lpVerb: windows::core::PCWSTR(verb.as_ptr()),
@@ -115,6 +135,25 @@ pub fn foreground_pid() -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn waits_for_a_process_to_exit() {
+        let mut child = std::process::Command::new("cmd.exe")
+            .args(["/c", "ping -n 2 127.0.0.1 >nul"])
+            .spawn()
+            .expect("spawn");
+        let t = std::time::Instant::now();
+        wait_for_exit(child.id(), 10_000);
+        assert!(
+            t.elapsed() < std::time::Duration::from_secs(9),
+            "returned when the process exited"
+        );
+        assert!(
+            child.try_wait().expect("status").is_some(),
+            "the process has exited"
+        );
+        wait_for_exit(u32::MAX - 3, 10_000); // no such process: returns at once
+    }
 
     #[test]
     fn admin_only_folders() {

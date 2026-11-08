@@ -72,7 +72,7 @@ function IncidentDetail({ inc }: { inc: ShutdownIncident }) {
 
 function AnalysisView({ a }: { a: DumpAnalysis }) {
   return (
-    <Panel title={`Debugger analysis · ${a.dumpPath.split("\\").pop()}`}>
+    <Panel title={`Debugger analysis · ${fileName(a.dumpPath)}`}>
       <Fields
         rows={[
           ["Stop code", a.bugcheckCode != null ? f.hex(a.bugcheckCode) : f.DASH],
@@ -109,25 +109,25 @@ function AnalysisView({ a }: { a: DumpAnalysis }) {
   );
 }
 
+/** One analysis at a time: the result or error always belongs to the dump it names. */
+type Analysis = { kind: "idle" } | { kind: "running"; path: string } | { kind: "done"; result: DumpAnalysis } | { kind: "failed"; path: string; error: string };
+
+const fileName = (path: string) => path.split("\\").pop() ?? path;
+
 export default function Bsod() {
   const { go } = useNav();
   const q = useQuery(() => api.bsodOverview(), [], { events: ["stability-changed"] });
   const [sel, setSel] = useState(0);
-  const [analysis, setAnalysis] = useState<DumpAnalysis | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [run, setRun] = useState<Analysis>({ kind: "idle" });
   const o = q.data;
   const inc = o?.incidents[sel];
 
   const analyze = async (path: string) => {
-    setBusy(path);
-    setError(null);
+    setRun({ kind: "running", path });
     try {
-      setAnalysis(await api.analyzeDump(path));
+      setRun({ kind: "done", result: await api.analyzeDump(path) });
     } catch (e) {
-      setError(errorText(e));
-    } finally {
-      setBusy(null);
+      setRun({ kind: "failed", path, error: errorText(e) });
     }
   };
 
@@ -174,13 +174,13 @@ export default function Bsod() {
             {o?.dumps.files.map((d) => (
               <div key={d.path} className="flex items-center gap-2 py-1 text-[12px] border-b border-line/50">
                 <div className="min-w-0">
-                  <div className="truncate" title={d.path}>{d.path.split("\\").pop()}</div>
+                  <div className="truncate" title={d.path}>{fileName(d.path)}</div>
                   <div className="text-faint">{d.kind} · {f.bytes(d.sizeBytes)} · {f.dateTime(d.modifiedMs)}</div>
                 </div>
                 {/* span carries the tooltip: disabled buttons get no pointer events */}
                 <span className="ml-auto" title={o.debuggerPath ? undefined : "Needs Debugging Tools for Windows (cdb.exe) — see the note above"}>
-                  <Button disabled={!!busy || !o.debuggerPath} onClick={() => analyze(d.path)}>
-                    <FileSearch className="size-3.5" /> {busy === d.path ? "Analyzing…" : "Analyze"}
+                  <Button disabled={run.kind === "running" || !o.debuggerPath} onClick={() => analyze(d.path)}>
+                    <FileSearch className="size-3.5" /> {run.kind === "running" && run.path === d.path ? "Analyzing…" : "Analyze"}
                   </Button>
                 </span>
               </div>
@@ -189,9 +189,14 @@ export default function Bsod() {
           </Panel>
         </div>
         <div className="flex-1 min-w-0 overflow-y-auto flex flex-col gap-3">
-          <ErrorNote error={error} />
-          {analysis && <AnalysisView a={analysis} />}
-          {inc ? <IncidentDetail inc={inc} /> : !analysis && <Empty title="Nothing selected">Select an incident or analyze a dump.</Empty>}
+          {run.kind === "running" && (
+            <Panel title={`Analyzing ${fileName(run.path)}`}>
+              <p className="text-[12.5px] text-muted">The debugger is reading the dump. This can take a minute, longer the first time symbols are downloaded.</p>
+            </Panel>
+          )}
+          {run.kind === "failed" && <ErrorNote error={`${fileName(run.path)}: ${run.error}`} />}
+          {run.kind === "done" && <AnalysisView a={run.result} />}
+          {inc ? <IncidentDetail inc={inc} /> : run.kind === "idle" && <Empty title="Nothing selected">Select an incident or analyze a dump.</Empty>}
         </div>
       </div>
     </div>
