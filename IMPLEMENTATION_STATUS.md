@@ -8,7 +8,7 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 
 | Item | State | Notes |
 |---|---|---|
-| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 170 Rust tests, clippy `-D warnings` clean |
+| Tauri 2 app, Rust workspace (core / platform / storage / app) | Done | 171 Rust tests, clippy `-D warnings` clean |
 | React + TS (strict) + Vite + Tailwind 4, Radix primitives, Lucide, uPlot, TanStack Virtual | Done | 17 frontend tests |
 | Manual QA pass of every page on the release build | Done (2026-11-07) | Unelevated; elevated-only sensors verified separately with `examples/probe.rs` |
 | Settings (validated, atomic save), structured logging (daily rotation, 7 files) | Done | |

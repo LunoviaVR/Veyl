@@ -42,7 +42,7 @@ pub fn get_game_candidates(state: State<'_, AppState>) -> Vec<Candidate> {
     let fg = veyl_windows::elevation::foreground_pid();
     let own = std::process::id();
     let table = state.live.read().processes.clone();
-    let games = veyl_windows::games::Games::load();
+    let games = veyl_windows::games::Games::current();
     let game = |r: &veyl_core::ProcessRow| {
         r.path
             .as_deref()

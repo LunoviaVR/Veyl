@@ -142,20 +142,22 @@ pub fn install_pinned(tools_dir: &Path) -> Result<PathBuf, String> {
     Ok(dest)
 }
 
-/// Locates PresentMon: the configured path, then `PresentMon*.exe` in `tools_dir`.
+/// Locates PresentMon: the configured path, then the pinned release in `tools_dir`, then any
+/// other `PresentMon*.exe` there (name order is not version order: "2.10" sorts before "2.6").
 pub fn find_presentmon(configured: Option<&str>, tools_dir: &Path) -> Option<PathBuf> {
     if let Some(p) = configured.filter(|p| !p.trim().is_empty()) {
         let p = PathBuf::from(p.trim());
         return (valid_presentmon_path(&p) && crate::elevation::may_execute(&p)).then_some(p);
     }
-    let mut found: Vec<PathBuf> = std::fs::read_dir(tools_dir)
-        .ok()?
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| valid_presentmon_path(p) && crate::elevation::may_execute(p))
-        .collect();
-    found.sort();
-    found.pop()
+    let pinned = tools_dir.join(format!("PresentMon-{PINNED_VERSION}-x64.exe"));
+    std::iter::once(pinned)
+        .chain(
+            std::fs::read_dir(tools_dir)
+                .ok()?
+                .flatten()
+                .map(|e| e.path()),
+        )
+        .find(|p| valid_presentmon_path(p) && crate::elevation::may_execute(p))
 }
 
 #[derive(Default)]

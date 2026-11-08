@@ -252,9 +252,6 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
     let mut last_context = Instant::now();
     let mut last_saved = None;
     let mut status = provider_status(&state).1;
-    // Reloaded because Windows and the stores add games as they are installed or first run.
-    let mut games = Games::load();
-    let mut games_loaded = Instant::now();
     let mut last_scan = Instant::now();
     // Processes not to auto-capture again: stopped by the user, or the capture failed or ended.
     let mut no_auto: HashSet<(u32, Option<i64>)> = HashSet::new();
@@ -278,10 +275,7 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
         let fg = fg_window.map(|(pid, _)| pid);
         if last_scan.elapsed() >= Duration::from_secs(1) {
             last_scan = Instant::now();
-            if games_loaded.elapsed() >= Duration::from_secs(60) {
-                games = Games::load();
-                games_loaded = Instant::now();
-            }
+            let games = Games::current();
             let table = state.live.read().processes.clone();
             let running: Vec<&veyl_core::ProcessRow> = table
                 .rows
@@ -300,11 +294,20 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
             game_pids = running.iter().map(|r| r.pid).collect();
 
             let usable = status.state != Availability::ProviderUnavailable;
+            // An automatic capture follows the game in front: a launcher that stays open
+            // in the game's folder must not keep the game itself from being captured.
+            let switch = auto_started
+                && session
+                    .as_ref()
+                    .is_some_and(|s| fg.is_some_and(|f| f != s.pid && game_pids.contains(&f)));
             if cmd.is_none()
-                && session.is_none()
+                && (session.is_none() || switch)
                 && usable
                 && state.settings.read().auto_capture_games
             {
+                if let Some(s) = session.as_ref().filter(|_| switch) {
+                    no_auto.insert(s.key); // do not switch back to it
+                }
                 if let Some(r) = pick_game(&running, fg, &no_auto) {
                     tracing::info!("auto-capturing {} ({})", r.name, r.pid);
                     cmd = Some(GamingCommand::Start { pid: r.pid });

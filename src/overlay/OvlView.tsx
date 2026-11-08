@@ -9,6 +9,7 @@ export function useOvl(design: string, theme: string): Ovl | null {
   const [ovl, setOvl] = useState<Ovl | null>(null);
   useEffect(() => {
     let alive = true;
+    setOvl(null); // never draw the previous layout with the new design's atlas
     if (!design || !theme) return;
     fetch(themeUrl(design, theme, "layout.ovl"))
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status}`))))

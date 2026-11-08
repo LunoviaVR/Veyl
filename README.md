@@ -113,9 +113,10 @@ compare them, export them to CSV and show an optional in-game overlay. It uses I
 which reads the timing events Windows already records, so nothing is injected into the game.
 Capture starts by itself when a game is running and stops when it closes. The overlay sits on
 the game's window (any corner, the middle of an edge or the centre), follows it, and shows only
-while that game is the active window. A game is anything on Windows' Game Bar list or a program
-with a window that runs from a Steam, Epic, GOG, EA, Ubisoft or Xbox library. Missed one? Press
-Win+G in the game and tick "Remember this is a game".
+while that game is the active window. A game is a program with a window that is on Windows' Game
+Bar list or runs from a Steam, Epic, GOG, EA, Ubisoft or Xbox library; apps Steam itself lists as
+software or tools (Blender, OBS Studio, Wallpaper Engine...) are left out. Missed one? Press Win+G
+in the game and tick "Remember this is a game".
 
 Pick the overlay's look on the Gaming page: 17 designs (Sleek Compact, Sleek Rings, Sleek Side,
 Performance, laptop and TV layouts and more) in Dark, Smoke, Float or White, from
