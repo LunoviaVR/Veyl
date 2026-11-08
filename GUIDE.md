@@ -156,6 +156,11 @@ Nexus (`D:\GitHub\Nexus`) is the house Tauri app. Veyl keeps its shape and drops
 
 - A unit lists its files. Touch nothing else. If the work needs another file, stop and say which and why.
 - A reviewer rejects a change that: stubs or skips real logic to make errors disappear; needs a paragraph-long comment to justify a workaround; weakens, skips or deletes a test; touches files outside the unit.
+- Severity bar. A finding goes to the fixer only if it breaks a rule in this guide (sections 1-12) visibly in the diff, or if both of these hold:
+  - It can happen on an ordinary Windows 10/11 x64 desktop: at most 64 logical CPUs, a WDDM 2.x GPU driver, a normal or elevated user. Ordinary events count, such as startup, a process exiting, a driver update or a GPU reset.
+  - It changes what the user sees or does: a wrong or placeholder number shown as a measurement, an error with no status, the wrong process ended, a crash, panic, hang or leak, unbounded growth, undefined behaviour, or a weakened test.
+
+  Everything else goes to `KNOWN-ISSUES.md` with its file:line and failing input, and is not fixed. That includes failures that need exotic hardware, a second unlikely OS failure, or a cosmetic difference.
 - A known limit gets one comment: `// shortcut: <the limit>, <when to upgrade>`.
 - Commit messages: `feat(<unit>): <what>`, `fix(<unit>): <what>`. Commit only the unit's files.
 - Never run `git stash`, `git reset`, `git checkout -- <path>`, `git clean`, or any other destructive git command.
