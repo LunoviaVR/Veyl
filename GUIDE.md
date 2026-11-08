@@ -164,4 +164,7 @@ Nexus (`D:\GitHub\Nexus`) is the house Tauri app. Veyl keeps its shape and drops
 
 Rules added when the same kind of bug showed up twice. Each one names the bug it prevents.
 
-(none yet)
+- **wrong-units-or-rate**: Every rate divides its delta by that delta's own elapsed: an `Instant` taken right next to the refresh that produced it (one for disks+networks, one just before `refresh_processes_specifics`), never a tick-wide `now`; the first sample of each I/O rate is 0, never a lifetime total.
+  CPU % is never published unprimed: `SystemSampler::new()` refreshes CPUs and processes (with CPU), sleeps `sysinfo::MINIMUM_CPU_UPDATE_INTERVAL`, refreshes processes (with CPU) again, and the loop waits one tick before its first `sample()`. Prevents: disk/net/process I/O rates skewed by how long the other refreshes took, and a first CPU snapshot that is 0 for all or a since-boot average per process.
+- **unchecked-os-error**: An OS call's failure code (`HRESULT`, `NTSTATUS`) is never dropped by `.ok()`, `.is_ok().then_some(..)`, `if let Ok`, `unwrap_or_default` or `let _ =`, and a wrapper around one returns `Result<_, code>`, never `Option`. Every such failure that leaves a field `None` pushes to `problems`, every tick, naming the call, the adapter/item and the code, like `"D3DKMTOpenAdapterFromLuid failed for {name} (0x{status:08X}): no temperature, fan or power"`; only the section 6 table's codes are exempt.
+  Prevents: sensor fields or `driver_version` silently `None` with an empty `GpuSnapshot.status` (`D3DKMTQueryAdapterInfo(ADAPTERPERFDATA)` failing, `CheckInterfaceSupport` returning `DXGI_ERROR_UNSUPPORTED`).
