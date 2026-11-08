@@ -81,7 +81,7 @@ pub async fn check(app: &AppHandle) -> UpdateStatus {
                     crate::notify::toast(
                         app,
                         "Update available",
-                        &format!("PC Health Console {} is ready to install.", u.version),
+                        &format!("Veyl {} is ready to install.", u.version),
                     );
                 }
             }

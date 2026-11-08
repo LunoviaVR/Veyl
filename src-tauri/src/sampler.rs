@@ -14,18 +14,18 @@ use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use pch_core::aggregate::BucketAggregator;
-use pch_core::alerts::{AlertEngine, AlertTransition};
-use pch_core::sensor_map::{cpu_package_power, cpu_package_temp, gpu_hotspot_temp, gpu_reading};
-use pch_core::{
+use tauri::{AppHandle, Emitter, Manager};
+use veyl_core::aggregate::BucketAggregator;
+use veyl_core::alerts::{AlertEngine, AlertTransition};
+use veyl_core::sensor_map::{cpu_package_power, cpu_package_temp, gpu_hotspot_temp, gpu_reading};
+use veyl_core::{
     HardwareSensorProvider, ProviderStatus, SensorKind, SensorRow, SensorStatsTracker, SensorsView,
     Status, TelemetryFrame,
 };
-use pch_windows::{
+use veyl_windows::{
     adlx, cpu, disk, energy, gpu, memory, network, nvml, pawnio, processes, storage_health,
     superio, thermal,
 };
-use tauri::{AppHandle, Emitter, Manager};
 
 use crate::metrics;
 use crate::state::{now_ms, AppState};
@@ -37,7 +37,7 @@ pub const BUCKET_MS: i64 = 5_000;
 struct Provider {
     inner: Box<dyn HardwareSensorProvider>,
     status: ProviderStatus,
-    last: Vec<pch_core::SensorReading>,
+    last: Vec<veyl_core::SensorReading>,
 }
 
 pub fn run(app: AppHandle, stop: Receiver<()>) {
@@ -146,7 +146,7 @@ pub fn run(app: AppHandle, stop: Receiver<()>) {
                 }
             }
         }
-        let readings: Vec<pch_core::SensorReading> = providers
+        let readings: Vec<veyl_core::SensorReading> = providers
             .iter()
             .flat_map(|p| p.last.iter().cloned())
             .collect();
@@ -190,7 +190,7 @@ pub fn run(app: AppHandle, stop: Receiver<()>) {
                     .filter(|_| {
                         readings
                             .iter()
-                            .any(|r| r.unit == pch_core::unit::RPM && r.kind == SensorKind::Fan)
+                            .any(|r| r.unit == veyl_core::unit::RPM && r.kind == SensorKind::Fan)
                     })
                     .map(|v| v as u32);
             }

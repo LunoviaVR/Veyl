@@ -2,7 +2,7 @@
 //! alerts and diagnostics. One function, so the three can never disagree on a
 //! key or a unit. Only measured values appear; missing readings are omitted.
 
-use pch_core::{unit, SensorCategory, SensorKind, SensorReading, TelemetryFrame};
+use veyl_core::{unit, SensorCategory, SensorKind, SensorReading, TelemetryFrame};
 
 /// Maximum number of provider sensor readings recorded to history per tick.
 pub const MAX_SENSOR_METRICS: usize = 48;
@@ -238,7 +238,7 @@ pub fn from_frame(f: &TelemetryFrame, sensors: &[SensorReading]) -> Vec<Metric> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pch_core::{GpuSnapshot, VolumeSnapshot};
+    use veyl_core::{GpuSnapshot, VolumeSnapshot};
 
     #[test]
     fn only_measured_values_become_metrics() {

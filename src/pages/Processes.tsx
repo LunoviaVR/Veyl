@@ -324,7 +324,7 @@ function DetailsModal({ row, onClose }: { row: ProcessRow; onClose: () => void }
         ]}
       />
       {p?.accessNote && <p className="mt-3 text-warn text-[12px]">{p.accessNote}</p>}
-      {p?.protectedByPolicy && <p className="mt-2 text-muted text-[12px]">This process is protected from ending in PC Health Console.</p>}
+      {p?.protectedByPolicy && <p className="mt-2 text-muted text-[12px]">This process is protected from ending in Veyl.</p>}
     </Modal>
   );
 }

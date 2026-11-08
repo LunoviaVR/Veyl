@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 use std::time::Instant;
 
-use pch_core::rate::per_second;
-use pch_core::{NetworkAdapterSnapshot, NetworkSnapshot, Status};
+use veyl_core::rate::per_second;
+use veyl_core::{NetworkAdapterSnapshot, NetworkSnapshot, Status};
 use windows::Win32::Foundation::ERROR_SUCCESS;
 use windows::Win32::NetworkManagement::IpHelper::{
     FreeMibTable, GetIfTable2, IF_TYPE_ETHERNET_CSMACD, IF_TYPE_IEEE80211, IF_TYPE_PPP,

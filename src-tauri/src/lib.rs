@@ -1,6 +1,6 @@
-//! PC Health Console application shell: wires collectors, storage and the UI
-//! together. Domain logic lives in `pch-core`; Windows access in `pch-windows`;
-//! persistence in `pch-storage`.
+//! Veyl application shell: wires collectors, storage and the UI
+//! together. Domain logic lives in `veyl-core`; Windows access in `veyl-windows`;
+//! persistence in `veyl-storage`.
 
 mod commands;
 mod events_watch;
@@ -22,14 +22,14 @@ use std::sync::mpsc::{channel, sync_channel, Sender};
 use std::sync::Arc;
 
 use parking_lot::{Mutex, RwLock};
-use pch_storage::Db;
 use tauri::{App, AppHandle, Manager, RunEvent, WindowEvent};
+use veyl_storage::Db;
 
 use crate::settings::Settings;
 use crate::state::{now_ms, AppState, Live, Paths};
 
 /// Environment variable that overrides the data directory (portable or managed installs).
-pub const DATA_DIR_ENV: &str = "PCHC_DATA_DIR";
+pub const DATA_DIR_ENV: &str = "VEYL_DATA_DIR";
 
 /// Keeps the non-blocking log writer alive; flushed when dropped at exit.
 struct LogGuard(#[allow(dead_code)] tracing_appender::non_blocking::WorkerGuard);
@@ -63,13 +63,13 @@ fn init_logging(dir: &std::path::Path) -> Option<tracing_appender::non_blocking:
     use tracing_subscriber::prelude::*;
     let appender = tracing_appender::rolling::Builder::new()
         .rotation(tracing_appender::rolling::Rotation::DAILY)
-        .filename_prefix("pc-health-console")
+        .filename_prefix("veyl")
         .filename_suffix("log")
         .max_log_files(7)
         .build(dir)
         .ok()?;
     let (writer, guard) = tracing_appender::non_blocking(appender);
-    let filter = tracing_subscriber::EnvFilter::try_from_env("PCHC_LOG")
+    let filter = tracing_subscriber::EnvFilter::try_from_env("VEYL_LOG")
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
     let _ = tracing_subscriber::registry()
         .with(filter)
@@ -132,8 +132,8 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let (cpu, cpu_status) = pch_windows::cpu::cpu_info();
-    let system_info = pch_windows::system_info::collect(now_ms(), cpu, cpu_status);
+    let (cpu, cpu_status) = veyl_windows::cpu::cpu_info();
+    let system_info = veyl_windows::system_info::collect(now_ms(), cpu, cpu_status);
     let retention = settings.retention.clone();
     let overlay_cfg = settings.overlay.clone();
     let start_minimized = settings.start_minimized;
@@ -309,7 +309,7 @@ pub fn run() {
             }
         }),
         Err(e) => {
-            eprintln!("PC Health Console failed to start: {e}");
+            eprintln!("Veyl failed to start: {e}");
             std::process::exit(1);
         }
     }

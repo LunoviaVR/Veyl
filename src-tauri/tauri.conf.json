@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "PC Health Console",
+  "productName": "Veyl",
   "version": "0.1.0",
-  "identifier": "com.pchealthconsole.app",
+  "identifier": "app.veyl.monitor",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "PC Health Console",
+        "title": "Veyl",
         "width": 1360,
         "height": 860,
         "minWidth": 960,

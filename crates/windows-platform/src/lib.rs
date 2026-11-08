@@ -1,7 +1,7 @@
-//! Windows platform layer for PC Health Console.
+//! Windows platform layer for Veyl.
 //!
 //! Every function that talks to the operating system lives here, behind small
-//! typed APIs that return `pch-core` models. Collectors own their OS handles and
+//! typed APIs that return `veyl-core` models. Collectors own their OS handles and
 //! release them in `Drop`; none of them are shared across threads. Failures are
 //! returned as values (a `Status` or an error) so one failing source never
 //! affects the others.

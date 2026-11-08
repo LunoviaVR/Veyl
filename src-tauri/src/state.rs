@@ -10,10 +10,10 @@ use std::sync::mpsc::SyncSender;
 use std::sync::Arc;
 
 use parking_lot::{Mutex, RwLock};
-use pch_core::alerts::AlertSignal;
-use pch_core::{DriveHealth, ProcessTable, SensorsView, Status, SystemInfo, TelemetryFrame};
-use pch_storage::Db;
 use serde::Serialize;
+use veyl_core::alerts::AlertSignal;
+use veyl_core::{DriveHealth, ProcessTable, SensorsView, Status, SystemInfo, TelemetryFrame};
+use veyl_storage::Db;
 
 use crate::gaming::{GamingCommand, GamingLive};
 use crate::settings::Settings;
@@ -70,7 +70,7 @@ pub struct AppState {
 
 impl AppState {
     /// Runs `f` against the read connection, or explains why history is unavailable.
-    pub fn with_db<T>(&self, f: impl FnOnce(&Db) -> pch_storage::Result<T>) -> Result<T, String> {
+    pub fn with_db<T>(&self, f: impl FnOnce(&Db) -> veyl_storage::Result<T>) -> Result<T, String> {
         let guard = self.reader.lock();
         match guard.as_ref() {
             Some(db) => f(db).map_err(|e| e.to_string()),

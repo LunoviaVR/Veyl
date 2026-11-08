@@ -13,11 +13,11 @@ npm install
 npm run tauri dev        # debug build with hot-reloading UI
 npm run tauri build      # release build + NSIS installer
 powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # full quality gate
-cargo run -p pch-windows --example probe                     # print what every collector reports on this PC
+cargo run -p veyl-windows --example probe                     # print what every collector reports on this PC
 ```
 
-Environment variables: `PCHC_DATA_DIR` overrides the data folder; `PCHC_LOG`
-sets the log filter (e.g. `debug`, `pch_windows=trace`).
+Environment variables: `VEYL_DATA_DIR` overrides the data folder; `VEYL_LOG`
+sets the log filter (e.g. `debug`, `veyl_windows=trace`).
 
 ## Rules of the codebase
 
@@ -31,7 +31,7 @@ sets the log filter (e.g. `debug`, `pch_windows=trace`).
 
 ## Adding a sensor provider
 
-1. Implement `pch_core::HardwareSensorProvider` in `crates/windows-platform/src/<name>.rs`:
+1. Implement `veyl_core::HardwareSensorProvider` in `crates/windows-platform/src/<name>.rs`:
 
 ```rust
 pub struct MyProvider { /* OS handles, owned */ }
@@ -47,13 +47,13 @@ impl HardwareSensorProvider for MyProvider {
 ```
 
    - `key` must be stable across polls: `<provider>/<device>/<sensor>`.
-   - Use canonical units from `pch_core::unit`; set `value: None` for unreadable sensors.
+   - Use canonical units from `veyl_core::unit`; set `value: None` for unreadable sensors.
    - Release handles in `Drop`. Parse external data with bounds-checked pure functions and test them.
 2. Register it in the provider list at the top of `src-tauri/src/sampler.rs`. The
    sampler polls it on the sensor interval, isolates panics, tracks min/max/avg and
    records temperatures, fans and power to history automatically.
 3. If it reports a value that should feed a canonical metric (CPU package
-   temperature, GPU hotspot), extend `pch_core::sensor_map` with the label and a test.
+   temperature, GPU hotspot), extend `veyl_core::sensor_map` with the label and a test.
 
 ## Adding a diagnostic rule
 

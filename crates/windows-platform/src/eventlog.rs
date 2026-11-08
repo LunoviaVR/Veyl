@@ -1,7 +1,7 @@
 //! Windows Event Log reader (wevtapi): history queries, push subscriptions and
 //! message formatting. Read-only: this module never clears or writes logs.
 
-use pch_core::events::{parse_event_xml, RawEvent};
+use veyl_core::events::{parse_event_xml, RawEvent};
 use windows::Win32::Foundation::{ERROR_INSUFFICIENT_BUFFER, WAIT_OBJECT_0};
 use windows::Win32::System::EventLog::{
     EvtClose, EvtFormatMessage, EvtFormatMessageEvent, EvtNext, EvtOpenPublisherMetadata, EvtQuery,
@@ -266,7 +266,7 @@ pub fn format_message(channel: &str, provider: &str, record_id: u64) -> Option<S
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pch_core::events::{classify, xpath_for_channel};
+    use veyl_core::events::{classify, xpath_for_channel};
 
     #[test]
     fn reads_recent_system_events() {
@@ -280,7 +280,7 @@ mod tests {
 
     #[test]
     fn rule_xpath_is_accepted_by_the_service() {
-        for ch in pch_core::events::CHANNELS {
+        for ch in veyl_core::events::CHANNELS {
             let (events, bad) =
                 query(ch, &xpath_for_channel(ch), true, 50).expect("query accepted");
             assert_eq!(bad, 0);

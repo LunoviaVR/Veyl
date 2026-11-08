@@ -9,9 +9,9 @@ rust-version = "1.85"
 license = "MIT"
 
 [workspace.dependencies]
-pch-core = { path = "crates/core" }
-pch-windows = { path = "crates/windows-platform" }
-pch-storage = { path = "crates/history-storage" }
+veyl-core = { path = "crates/core" }
+veyl-windows = { path = "crates/windows-platform" }
+veyl-storage = { path = "crates/history-storage" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"

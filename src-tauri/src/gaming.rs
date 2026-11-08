@@ -7,13 +7,13 @@ use std::sync::atomic::Ordering;
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
 
-use pch_core::frame_stats::{compute, FrameStats, FrameStatsConfig};
-use pch_core::frames::{FrameMetricsProvider, FrameRecord};
-use pch_core::{Availability, Status};
-use pch_storage::NewSession;
-use pch_windows::presentmon::{find_presentmon, PresentMonCli};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
+use veyl_core::frame_stats::{compute, FrameStats, FrameStatsConfig};
+use veyl_core::frames::{FrameMetricsProvider, FrameRecord};
+use veyl_core::{Availability, Status};
+use veyl_storage::NewSession;
+use veyl_windows::presentmon::{find_presentmon, PresentMonCli};
 
 use crate::state::{now_ms, AppState};
 use crate::writer::WriteMsg;

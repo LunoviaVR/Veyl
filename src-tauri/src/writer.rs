@@ -7,9 +7,9 @@ use std::sync::mpsc::{Receiver, RecvTimeoutError, SyncSender, TrySendError};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use pch_core::aggregate::BucketValue;
-use pch_core::events::RawEvent;
-use pch_storage::{AlertRow, Db, NewSession, Retention};
+use veyl_core::aggregate::BucketValue;
+use veyl_core::events::RawEvent;
+use veyl_storage::{AlertRow, Db, NewSession, Retention};
 
 pub enum WriteMsg {
     Samples(Vec<(i64, String, String, BucketValue)>),
@@ -104,11 +104,12 @@ pub fn run(
             let from = if rollup_from == 0 {
                 until - 48 * 3_600_000
             } else {
-                rollup_from - pch_storage::MINUTE_MS
+                rollup_from - veyl_storage::MINUTE_MS
             };
             match db.rollup(from, until) {
                 Ok(_) => {
-                    rollup_from = until.div_euclid(pch_storage::MINUTE_MS) * pch_storage::MINUTE_MS;
+                    rollup_from =
+                        until.div_euclid(veyl_storage::MINUTE_MS) * veyl_storage::MINUTE_MS;
                     if let Err(e) = db.kv_set("rollup_until", &rollup_from.to_string()) {
                         tracing::warn!("saving rollup position failed: {e}");
                     }

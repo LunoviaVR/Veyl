@@ -169,7 +169,7 @@ export default function App() {
         <nav aria-label="Main" className={cn("flex flex-col shrink-0 border-r border-line bg-panel transition-[width] duration-150", collapsed ? "w-[52px]" : "w-[208px]")}>
           <div className={cn("flex items-center h-12 shrink-0 gap-2", collapsed ? "justify-center" : "px-3.5")}>
             <Gauge className="size-5 text-accent shrink-0" />
-            {!collapsed && <span className="font-semibold text-[13.5px] truncate">PC Health Console</span>}
+            {!collapsed && <span className="font-semibold text-[13.5px] truncate">Veyl</span>}
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-2">
             {GROUPS.map((g) => (
@@ -201,7 +201,7 @@ export default function App() {
             <div className="px-5 py-1.5 text-[12.5px] border-b border-line bg-accent/8 flex items-center gap-3" role="status">
               <Download className="size-3.5 text-accent" />
               <span>
-                PC Health Console {update.data.available.version} is available (you have {update.data.currentVersion}).
+                Veyl {update.data.available.version} is available (you have {update.data.currentVersion}).
               </span>
               {updateError && <span className="text-bad">{updateError}</span>}
               <Button

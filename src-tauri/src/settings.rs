@@ -4,10 +4,10 @@
 
 use std::path::{Path, PathBuf};
 
-use pch_core::alerts::{Comparator, ThresholdRule};
-use pch_core::events::Severity;
-use pch_storage::Retention;
 use serde::{Deserialize, Serialize};
+use veyl_core::alerts::{Comparator, ThresholdRule};
+use veyl_core::events::Severity;
+use veyl_storage::Retention;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
@@ -391,7 +391,7 @@ mod tests {
         assert!(s.overlay.enabled);
         assert_eq!(s.overlay.refresh_ms, 500);
         assert_eq!(s.sample_interval_ms, 1000);
-        let dir = std::env::temp_dir().join(format!("pch-settings-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("veyl-settings-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("dir");
         let p = dir.join("settings.json");
         s.save(&p).expect("save");

@@ -4,7 +4,7 @@
 
 use std::ffi::{c_char, c_void, CStr};
 
-use pch_core::{
+use veyl_core::{
     Availability, HardwareSensorProvider, ProviderPoll, SensorCategory, SensorKind, SensorReading,
     Status,
 };
@@ -190,7 +190,7 @@ impl HardwareSensorProvider for NvmlProvider {
                 let mut v = 0u32;
                 (f(&mut v) == 0).then_some(f64::from(v))
             };
-            use pch_core::unit::*;
+            use veyl_core::unit::*;
             // SAFETY (all calls below): live device handle, out-pointer to a local.
             push(
                 "GPU temperature",

@@ -10,7 +10,7 @@
 //!
 //! Opening the driver requires administrator rights.
 
-use pch_core::{
+use veyl_core::{
     Availability, HardwareSensorProvider, ProviderPoll, SensorCategory, SensorKind, SensorReading,
     Status,
 };
@@ -301,7 +301,7 @@ impl HardwareSensorProvider for IntelCpuTempProvider {
                 category: SensorCategory::Cpu,
                 kind: SensorKind::Temperature,
                 label: label.into(),
-                unit: pch_core::unit::CELSIUS.into(),
+                unit: veyl_core::unit::CELSIUS.into(),
                 value: v,
                 timestamp_ms: now_ms,
             })

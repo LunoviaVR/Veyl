@@ -9,7 +9,7 @@
 
 use std::arch::x86_64::__cpuid;
 
-use pch_core::{CpuInfo, CpuSnapshot, Status};
+use veyl_core::{CpuInfo, CpuSnapshot, Status};
 use windows::Win32::System::ProcessStatus::{GetPerformanceInfo, PERFORMANCE_INFORMATION};
 use windows::Win32::System::SystemInformation::{
     GetLogicalProcessorInformationEx, GetTickCount64, RelationAll, RelationProcessorCore,

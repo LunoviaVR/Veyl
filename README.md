@@ -1,4 +1,4 @@
-# PC Health Console
+# Veyl
 
 A Windows desktop application for monitoring, troubleshooting and understanding PC
 health: live system and process monitoring, hardware sensors, frame-time analysis for
@@ -33,11 +33,11 @@ not report is shown as "—" with an explanation, never as 0.
 
 ## Install
 
-Run `PC Health Console_x.y.z_x64-setup.exe` from the release page. It installs per
+Run `Veyl_x.y.z_x64-setup.exe` from the release page. It installs per
 user (no administrator rights needed to install). The application itself starts as
 administrator (Windows shows a UAC prompt), which enables frame capture, kernel dump
 analysis and full process details. Uninstalling removes the program; your data folder
-(`%LOCALAPPDATA%\com.pchealthconsole.app`) is kept unless you delete it. Windows crash
+(`%LOCALAPPDATA%\app.veyl.monitor`) is kept unless you delete it. Windows crash
 history and crash-dump settings are never modified.
 
 ### Background running
@@ -100,7 +100,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # formatting, lints
    `https://github.com/LunoviaVR/Veyl/releases/latest/download/latest.json`; change
    `plugins.updater.endpoints` in `src-tauri/tauri.conf.json` if the repository name differs).
 2. Add repository secrets `TAURI_SIGNING_PRIVATE_KEY` (the contents of
-   `%USERPROFILE%\.tauri\pc-health-console.key`) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+   `%USERPROFILE%\.tauri\veyl.key`) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
    (empty). Back the key up: without it, installed copies cannot be updated.
 3. Bump the version in `src-tauri/tauri.conf.json`, `package.json` and `Cargo.toml`,
    commit, and push a tag `vX.Y.Z`. The *Release* workflow builds, signs and drafts the
@@ -117,7 +117,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check.ps1   # formatting, lints
 | Gaming: permission error | Run the installed (elevated) build, or add your account to *Performance Log Users*. |
 | No dump files listed | Windows keeps minidumps only when *Startup and Recovery → Write debugging information* is enabled; old dumps are deleted by Windows. |
 | History empty for a period | The application was not running then; gaps are shown, never filled in. |
-| Logs | Settings → About → Logs (`%LOCALAPPDATA%\com.pchealthconsole.app\logs`). Set `PCHC_LOG=debug` for more detail. |
+| Logs | Settings → About → Logs (`%LOCALAPPDATA%\app.veyl.monitor\logs`). Set `VEYL_LOG=debug` for more detail. |
 
 ## Documentation
 

@@ -45,7 +45,7 @@ export function ContextCharts({ ctx, markerMs }: { ctx: TelemetryContext; marker
   if (ctx.empty) {
     return (
       <p className="text-[12.5px] text-muted">
-        No telemetry was recorded between {f.dateTime(ctx.fromMs)} and {f.dateTime(ctx.toMs)}. PC Health Console was not running or history recording was off, so system load and temperatures at that time are unknown.
+        No telemetry was recorded between {f.dateTime(ctx.fromMs)} and {f.dateTime(ctx.toMs)}. Veyl was not running or history recording was off, so system load and temperatures at that time are unknown.
       </p>
     );
   }

@@ -53,7 +53,7 @@ pub fn apply(app: &AppHandle, state: &AppState, cfg: &OverlaySettings) -> Result
     let win = match existing {
         Some(win) => win,
         None => WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("overlay.html".into()))
-            .title("PC Health Console overlay")
+            .title("Veyl overlay")
             .decorations(false)
             .transparent(true)
             .shadow(false)

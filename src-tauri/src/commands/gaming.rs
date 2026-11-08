@@ -1,6 +1,6 @@
-use pch_storage::SessionRow;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
+use veyl_storage::SessionRow;
 
 use super::CmdResult;
 use crate::gaming::{GamingCommand, GamingLive};
@@ -35,9 +35,9 @@ pub fn get_game_candidates(state: State<'_, AppState>) -> Vec<Candidate> {
         "searchhost.exe",
         "startmenuexperiencehost.exe",
         "textinputhost.exe",
-        "pc-health-console.exe",
+        "veyl.exe",
     ];
-    let fg = pch_windows::elevation::foreground_pid();
+    let fg = veyl_windows::elevation::foreground_pid();
     let own = std::process::id();
     let table = state.live.read().processes.clone();
     let mut list: Vec<Candidate> = table

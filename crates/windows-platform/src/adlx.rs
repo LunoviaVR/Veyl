@@ -10,7 +10,7 @@
 
 use std::ffi::{c_char, CStr};
 
-use pch_core::{
+use veyl_core::{
     Availability, HardwareSensorProvider, ProviderPoll, SensorCategory, SensorKind, SensorReading,
     Status,
 };
@@ -327,7 +327,7 @@ impl HardwareSensorProvider for AdlxProvider {
                     let mut v = 0;
                     ok(g(m, &mut v)).then_some(f64::from(v))
                 };
-                use pch_core::unit::*;
+                use veyl_core::unit::*;
                 if let Some(v) = f(vt.gpu_temperature) {
                     push("GPU temperature", SensorKind::Temperature, CELSIUS, Some(v));
                 }

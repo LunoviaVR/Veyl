@@ -15,13 +15,13 @@ pub fn show_main(app: &AppHandle) {
 }
 
 pub fn create(app: &AppHandle) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "Open PC Health Console", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "Open Veyl", true, None::<&str>)?;
     let overlay = MenuItem::with_id(app, "overlay", "Toggle game overlay", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Exit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &overlay, &sep, &quit])?;
     let mut builder = TrayIconBuilder::with_id("main")
-        .tooltip("PC Health Console")
+        .tooltip("Veyl")
         .menu(&menu)
         .show_menu_on_left_click(false);
     if let Some(icon) = app.default_window_icon() {

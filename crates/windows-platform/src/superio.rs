@@ -7,7 +7,7 @@
 //! with another tool's bank selection. Only index and bank-select writes are made,
 //! which is how this chip's registers are read; no configuration is changed.
 
-use pch_core::{
+use veyl_core::{
     Availability, HardwareSensorProvider, ProviderPoll, SensorCategory, SensorKind, SensorReading,
     Status,
 };
@@ -233,7 +233,7 @@ impl HardwareSensorProvider for SuperIoProvider {
                 timestamp_ms: now_ms,
             })
         };
-        use pch_core::unit::*;
+        use veyl_core::unit::*;
         for (i, reg) in FAN_COUNT_REGS.iter().enumerate() {
             let rpm = match (chip.read(*reg), chip.read(reg + 1)) {
                 (Some(h), Some(l)) => fan_rpm(h, l),

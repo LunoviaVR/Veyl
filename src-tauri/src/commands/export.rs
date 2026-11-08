@@ -3,11 +3,11 @@
 
 use std::path::PathBuf;
 
-use pch_core::events::classify;
-use pch_core::redact::redact;
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
+use veyl_core::events::classify;
+use veyl_core::redact::redact;
 
 use super::{check_range, CmdResult};
 use crate::export::{events_csv, frametimes_csv, redaction_context, series_csv};
@@ -92,11 +92,11 @@ struct Report {
     generated_ms: i64,
     application_version: String,
     redacted: bool,
-    system: pch_core::SystemInfo,
-    findings: Vec<pch_core::diagnostics::Finding>,
-    incidents: Vec<pch_core::events::ShutdownIncident>,
-    events_30d: Vec<pch_core::events::StabilityEvent>,
-    drives: Vec<pch_core::DriveHealth>,
+    system: veyl_core::SystemInfo,
+    findings: Vec<veyl_core::diagnostics::Finding>,
+    incidents: Vec<veyl_core::events::ShutdownIncident>,
+    events_30d: Vec<veyl_core::events::StabilityEvent>,
+    drives: Vec<veyl_core::DriveHealth>,
 }
 
 /// A JSON diagnostic report (system summary, findings, incidents, events, drives).
@@ -115,7 +115,7 @@ pub fn export_report(app: AppHandle, redact_personal: bool) -> CmdResult<Option<
         redacted: redact_personal,
         system: state.system_info.read().clone(),
         findings: super::stability::get_diagnostics(state.clone()).unwrap_or_default(),
-        incidents: pch_core::events::group_shutdown_incidents(&events),
+        incidents: veyl_core::events::group_shutdown_incidents(&events),
         events_30d: events,
         drives: state.live.read().drives.as_ref().clone(),
     };
@@ -135,7 +135,7 @@ pub fn export_report(app: AppHandle, redact_personal: bool) -> CmdResult<Option<
             text = serde_json::to_string_pretty(&v).map_err(|e| e.to_string())?;
         }
     }
-    let Some(path) = ask_path(&app, "pc-health-report.json", "json", "JSON") else {
+    let Some(path) = ask_path(&app, "veyl-report.json", "json", "JSON") else {
         return Ok(None);
     };
     write(path, text)

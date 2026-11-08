@@ -1,16 +1,16 @@
 use std::path::PathBuf;
 
-use pch_core::diagnostics::{
-    self, DiagnosticInput, Finding, MetricSeries, SessionDigest, Thresholds,
-};
-use pch_core::events::{
-    classify, group_shutdown_incidents, EventDetail, ShutdownIncident, StabilityEvent,
-};
-use pch_storage::Series;
-use pch_windows::debugger::{self, DumpAnalysis, DumpListing};
-use pch_windows::version_info::{file_version_info, FileVersionInfo};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
+use veyl_core::diagnostics::{
+    self, DiagnosticInput, Finding, MetricSeries, SessionDigest, Thresholds,
+};
+use veyl_core::events::{
+    classify, group_shutdown_incidents, EventDetail, ShutdownIncident, StabilityEvent,
+};
+use veyl_storage::Series;
+use veyl_windows::debugger::{self, DumpAnalysis, DumpListing};
+use veyl_windows::version_info::{file_version_info, FileVersionInfo};
 
 use super::{blocking, check_range, CmdResult};
 use crate::state::{now_ms, AppState, ChannelStatus};
@@ -91,7 +91,7 @@ pub fn get_event_detail(
     channel: String,
     record_id: u64,
 ) -> CmdResult<EventDetailView> {
-    if !pch_core::events::CHANNELS.contains(&channel.as_str()) {
+    if !veyl_core::events::CHANNELS.contains(&channel.as_str()) {
         return Err("Unknown channel".into());
     }
     let raw = state
@@ -137,7 +137,7 @@ pub fn get_event_detail(
         }
     }
     let message =
-        pch_windows::eventlog::format_message(&event.channel, &event.provider, event.record_id);
+        veyl_windows::eventlog::format_message(&event.channel, &event.provider, event.record_id);
     Ok(EventDetailView {
         context: context(&state, event.time_ms, 15 * 60_000),
         event,
@@ -237,7 +237,7 @@ pub fn get_diagnostics(state: State<'_, AppState>) -> CmdResult<Vec<Finding>> {
             series.push(MetricSeries {
                 key,
                 label,
-                bucket_ms: pch_storage::MINUTE_MS,
+                bucket_ms: veyl_storage::MINUTE_MS,
                 points,
             });
         }

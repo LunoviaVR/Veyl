@@ -1,9 +1,9 @@
-# Measures PC Health Console's own resource use (process + its WebView2 processes).
+# Measures Veyl's own resource use (process + its WebView2 processes).
 # Usage: powershell -ExecutionPolicy Bypass -File scripts/measure-overhead.ps1 [-Exe path] [-Seconds 120]
 # Runs the release build unelevated (RunAsInvoker compatibility layer) with a temporary
 # data folder, then samples two scenarios: window visible on Overview, and minimized to tray.
 param(
-    [string]$Exe = "$PSScriptRoot\..\target\release\pc-health-console.exe",
+    [string]$Exe = "$PSScriptRoot\..\target\release\veyl.exe",
     [int]$Seconds = 120,
     [int]$WarmupSeconds = 30
 )
@@ -16,7 +16,7 @@ public class MW {
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, System.Text.StringBuilder s, int n);
   [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);
-  public static IntPtr Find(uint pid) { IntPtr r = IntPtr.Zero; EnumWindows((h, l) => { uint p; GetWindowThreadProcessId(h, out p); var sb = new System.Text.StringBuilder(256); GetWindowText(h, sb, 256); if (p == pid && sb.ToString() == "PC Health Console") r = h; return true; }, IntPtr.Zero); return r; }
+  public static IntPtr Find(uint pid) { IntPtr r = IntPtr.Zero; EnumWindows((h, l) => { uint p; GetWindowThreadProcessId(h, out p); var sb = new System.Text.StringBuilder(256); GetWindowText(h, sb, 256); if (p == pid && sb.ToString() == "Veyl") r = h; return true; }, IntPtr.Zero); return r; }
 }
 "@
 
@@ -59,9 +59,9 @@ function Measure-Scenario([int]$root, [string]$name) {
     }
 }
 
-$data = Join-Path $env:TEMP "pchc-overhead-$PID"
+$data = Join-Path $env:TEMP "veyl-overhead-$PID"
 New-Item -ItemType Directory -Force $data | Out-Null
-$env:PCHC_DATA_DIR = $data
+$env:VEYL_DATA_DIR = $data
 $env:__COMPAT_LAYER = "RunAsInvoker"
 $proc = Start-Process -FilePath (Resolve-Path $Exe) -PassThru
 try {

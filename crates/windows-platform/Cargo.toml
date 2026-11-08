@@ -1,13 +1,13 @@
 [package]
-name = "pch-windows"
-description = "Windows telemetry collectors, process control, event log, storage and external tool integrations for PC Health Console"
+name = "veyl-windows"
+description = "Windows telemetry collectors, process control, event log, storage and external tool integrations for Veyl"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-pch-core.workspace = true
+veyl-core.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tracing.workspace = true

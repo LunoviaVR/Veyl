@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use pch_core::ProcessTable;
-use pch_windows::process_control::{self, ControlError, Priority, ProcessDetails};
-use pch_windows::{connections, services, startup};
 use serde::Serialize;
 use tauri::{AppHandle, State};
 use tauri_plugin_opener::OpenerExt;
+use veyl_core::ProcessTable;
+use veyl_windows::process_control::{self, ControlError, Priority, ProcessDetails};
+use veyl_windows::{connections, services, startup};
 
 use super::{blocking, CmdResult};
 use crate::state::AppState;

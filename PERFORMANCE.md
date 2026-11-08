@@ -45,7 +45,7 @@ after 30 days. Event copies are kept 365 days.
 `scripts/measure-overhead.ps1`:
 
 1. Starts the release executable unelevated (`__COMPAT_LAYER=RunAsInvoker`) with
-   `PCHC_DATA_DIR` pointing to a new temporary folder.
+   `VEYL_DATA_DIR` pointing to a new temporary folder.
 2. Waits for warm-up, then samples `TotalProcessorTime`, working set and private bytes
    of the application process and every descendant process (WebView2), plus
    `Win32_Process.WriteTransferCount`, at the start and end of each window.

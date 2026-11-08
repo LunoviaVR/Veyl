@@ -1,6 +1,6 @@
 //! Volumes (capacity) and physical-disk activity (PDH `PhysicalDisk`).
 
-use pch_core::{DisksSnapshot, PhysicalDiskActivity, Status, VolumeSnapshot};
+use veyl_core::{DisksSnapshot, PhysicalDiskActivity, Status, VolumeSnapshot};
 use windows::Win32::Storage::FileSystem::{
     GetDiskFreeSpaceExW, GetDriveTypeW, GetLogicalDriveStringsW, GetVolumeInformationW,
 };

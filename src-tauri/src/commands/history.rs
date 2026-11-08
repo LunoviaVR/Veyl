@@ -1,6 +1,6 @@
-use pch_core::alerts::AlertSignal;
-use pch_storage::{AlertRow, MetricInfo, Series};
 use tauri::State;
+use veyl_core::alerts::AlertSignal;
+use veyl_storage::{AlertRow, MetricInfo, Series};
 
 use super::{check_range, CmdResult};
 use crate::state::{now_ms, AppState};

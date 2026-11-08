@@ -6,12 +6,12 @@
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-use pch_core::events::{
+use tauri::{AppHandle, Emitter, Manager};
+use veyl_core::events::{
     classify, xpath_for_channel, EventDetail, EventKind, RawEvent, Severity, CHANNELS,
 };
-use pch_core::{Availability, Status};
-use pch_windows::eventlog::{self, EventLogError, Subscription};
-use tauri::{AppHandle, Emitter, Manager};
+use veyl_core::{Availability, Status};
+use veyl_windows::eventlog::{self, EventLogError, Subscription};
 
 use crate::state::{now_ms, AppState, ChannelStatus};
 use crate::writer::WriteMsg;

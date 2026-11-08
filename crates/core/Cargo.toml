@@ -1,6 +1,6 @@
 [package]
-name = "pch-core"
-description = "Platform-independent models, calculations, event interpretation, alert and diagnostic rules for PC Health Console"
+name = "veyl-core"
+description = "Platform-independent models, calculations, event interpretation, alert and diagnostic rules for Veyl"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

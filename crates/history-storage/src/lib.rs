@@ -6,15 +6,15 @@
 //!   transactions; complete minutes are rolled up into a long-term table, and
 //!   both tables are pruned by configurable retention.
 //! - Events are deduplicated on (channel, record id, time) and stored raw;
-//!   interpretation happens in `pch-core` when they are read, so improving a
+//!   interpretation happens in `veyl-core` when they are read, so improving a
 //!   classifier never requires a data migration.
 
 use std::path::Path;
 
-use pch_core::aggregate::BucketValue;
-use pch_core::events::RawEvent;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
+use veyl_core::aggregate::BucketValue;
+use veyl_core::events::RawEvent;
 
 #[derive(thiserror::Error, Debug)]
 pub enum StorageError {
@@ -692,7 +692,7 @@ mod tests {
 
     #[test]
     fn migrations_apply_once_and_are_idempotent() {
-        let dir = std::env::temp_dir().join(format!("pch-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("veyl-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("dir");
         let path = dir.join("m.db");
         let _ = std::fs::remove_file(&path);

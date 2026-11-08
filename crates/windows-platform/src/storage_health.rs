@@ -8,7 +8,7 @@
 //! driver; a refusal is reported as "Permission required". SATA SMART attributes
 //! need ATA pass-through, which requires elevation and is not implemented.
 
-use pch_core::{Availability, DriveHealth, NvmeHealth, Status};
+use veyl_core::{Availability, DriveHealth, NvmeHealth, Status};
 use windows::Win32::Foundation::GENERIC_ACCESS_RIGHTS;
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,

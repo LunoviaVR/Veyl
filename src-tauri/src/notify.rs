@@ -1,10 +1,10 @@
 //! Alert recording and Windows notifications.
 
-use pch_core::alerts::{AlertSignal, AlertTransition};
-use pch_core::events::Severity;
-use pch_storage::AlertRow;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_notification::NotificationExt;
+use veyl_core::alerts::{AlertSignal, AlertTransition};
+use veyl_core::events::Severity;
+use veyl_storage::AlertRow;
 
 use crate::state::AppState;
 use crate::writer::{self, WriteMsg};

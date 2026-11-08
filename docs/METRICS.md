@@ -1,6 +1,6 @@
 # Metric definitions
 
-Exact definitions of every derived number shown by PC Health Console. The
+Exact definitions of every derived number shown by Veyl. The
 implementations are in `crates/core/src/frame_stats.rs`, `crates/core/src/rate.rs`
 and `crates/windows-platform/src/gpu.rs`, each with unit tests.
 

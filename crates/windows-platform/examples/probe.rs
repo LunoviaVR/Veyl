@@ -1,8 +1,8 @@
 //! Prints what every collector reports on this machine. Used to verify hardware
-//! support and to fill COMPATIBILITY.md: `cargo run -p pch-windows --example probe`.
+//! support and to fill COMPATIBILITY.md: `cargo run -p veyl-windows --example probe`.
 
-use pch_core::HardwareSensorProvider;
-use pch_windows::*;
+use veyl_core::HardwareSensorProvider;
+use veyl_windows::*;
 
 fn main() {
     let now = 0;

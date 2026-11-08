@@ -1,6 +1,6 @@
 //! Static system identification: computer name, Windows version, boot time.
 
-use pch_core::{CpuInfo, SystemInfo};
+use veyl_core::{CpuInfo, SystemInfo};
 use windows::Wdk::System::SystemServices::RtlGetVersion;
 use windows::Win32::System::SystemInformation::{
     ComputerNamePhysicalDnsHostname, GetComputerNameExW, GetTickCount64, OSVERSIONINFOW,

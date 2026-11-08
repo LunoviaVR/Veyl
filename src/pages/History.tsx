@@ -70,8 +70,8 @@ export function metricLabel(key: string, gpuNames: string[] = []): string {
     "net.rx_bps": "Network receive",
     "net.tx_bps": "Network send",
     "thermal.passive_limit_min_pct": "Thermal passive limit",
-    "self.cpu_pct": "PC Health Console CPU",
-    "self.working_set_bytes": "PC Health Console memory",
+    "self.cpu_pct": "Veyl CPU",
+    "self.working_set_bytes": "Veyl memory",
     "self.tick_cost_ms": "Sampling cost per tick",
   };
   if (fixed[key]) return fixed[key];

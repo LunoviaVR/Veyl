@@ -78,7 +78,7 @@ impl Priority {
 pub enum ControlError {
     #[error("{0}")]
     Refused(String),
-    #[error("Access denied. The process is protected or runs with higher privileges; restarting PC Health Console as administrator may allow this.")]
+    #[error("Access denied. The process is protected or runs with higher privileges; restarting Veyl as administrator may allow this.")]
     AccessDenied,
     #[error("The process has already exited.")]
     Exited,
@@ -132,7 +132,7 @@ fn creation_ms(h: &OwnedHandle) -> Result<Option<i64>, ControlError> {
     unsafe { GetProcessTimes(h.raw(), &mut c, &mut e, &mut k, &mut u) }
         .map_err(|e| ControlError::Os(format!("GetProcessTimes failed: {e}")))?;
     let ft = (u64::from(c.dwHighDateTime) << 32) | u64::from(c.dwLowDateTime);
-    Ok(pch_core::time::filetime_to_unix_ms(ft))
+    Ok(veyl_core::time::filetime_to_unix_ms(ft))
 }
 
 fn is_critical(h: &OwnedHandle) -> Option<bool> {
@@ -151,7 +151,7 @@ pub fn refusal_reason(pid: u32, name: &str) -> Option<String> {
         return Some("The System and System Idle processes cannot be ended.".into());
     }
     if pid == own {
-        return Some("Use Exit from the tray menu to close PC Health Console.".into());
+        return Some("Use Exit from the tray menu to close Veyl.".into());
     }
     if PROTECTED_NAMES.contains(&name.to_ascii_lowercase().as_str()) {
         return Some(format!("{name} is a critical Windows process; ending it would crash Windows or end your session."));

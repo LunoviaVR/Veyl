@@ -1,7 +1,7 @@
-//! Platform-independent core of PC Health Console.
+//! Platform-independent core of Veyl.
 //!
 //! Everything here is pure: no operating-system calls, no I/O. Collectors in
-//! `pch-windows` produce raw values; this crate defines the typed models they
+//! `veyl-windows` produce raw values; this crate defines the typed models they
 //! normalize into, plus every calculation, interpretation and rule that turns
 //! those values into statistics, alerts and diagnostic findings. Keeping it pure
 //! makes all of it unit-testable on any machine with synthetic or recorded data.

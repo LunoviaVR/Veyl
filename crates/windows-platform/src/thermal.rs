@@ -4,7 +4,7 @@
 //! most desktops they are a motherboard or chipset sensor, not the CPU die, so
 //! they are labelled as ACPI zones and never presented as "CPU temperature".
 
-use pch_core::{
+use veyl_core::{
     Availability, HardwareSensorProvider, ProviderPoll, SensorCategory, SensorKind, SensorReading,
     Status,
 };
@@ -121,7 +121,7 @@ impl HardwareSensorProvider for ThermalZoneProvider {
                         &zone,
                         "Temperature",
                         SensorKind::Temperature,
-                        pch_core::unit::CELSIUS,
+                        veyl_core::unit::CELSIUS,
                         kelvin_to_celsius(v, c.temp_tenths),
                     );
                 }
@@ -139,7 +139,7 @@ impl HardwareSensorProvider for ThermalZoneProvider {
                     &zone,
                     "Passive cooling limit",
                     SensorKind::Throttle,
-                    pch_core::unit::PERCENT,
+                    veyl_core::unit::PERCENT,
                     Some(v),
                 );
             }
@@ -150,7 +150,7 @@ impl HardwareSensorProvider for ThermalZoneProvider {
                     &zone,
                     "Throttle reasons (bitmask)",
                     SensorKind::Throttle,
-                    pch_core::unit::COUNT,
+                    veyl_core::unit::COUNT,
                     Some(v),
                 );
             }

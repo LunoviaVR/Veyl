@@ -1,6 +1,6 @@
 # Architecture
 
-PC Health Console is a Tauri 2 application. Rust owns every system interaction,
+Veyl is a Tauri 2 application. Rust owns every system interaction,
 calculation, rule and persistence step; the React/TypeScript frontend only renders
 data and sends user intent back through typed commands.
 
@@ -8,11 +8,11 @@ data and sends user intent back through typed commands.
 
 ```
 crates/
-  core/               pch-core     Pure Rust, no OS calls. Models, statistics, event interpretation,
+  core/               veyl-core    Pure Rust, no OS calls. Models, statistics, event interpretation,
                                    alert engine, diagnostic rules, redaction, aggregation.
-  windows-platform/   pch-windows  Every Windows API call: collectors, process control, event log,
+  windows-platform/   veyl-windows Every Windows API call: collectors, process control, event log,
                                    storage IOCTLs, external tools (PresentMon, cdb), elevation.
-  history-storage/    pch-storage  SQLite: migrations, batched writes, rollups, retention, queries.
+  history-storage/    veyl-storage SQLite: migrations, batched writes, rollups, retention, queries.
 src-tauri/            app shell    Threads, scheduling, shared state, IPC commands, tray, overlay,
                                    notifications, exports, settings.
 src/                  React UI     Pages, components, typed IPC wrappers, live store.
@@ -24,17 +24,17 @@ src/                  React UI     Pages, components, typed IPC wrappers, live s
 |---|---|
 | core | `crates/core/src/model.rs` |
 | windows-platform | `crates/windows-platform/src/{handle,pdh,registry,elevation,version_info}.rs` |
-| system-telemetry | `pch-windows::{cpu,memory,disk,network,system_info}` |
-| process-monitor | `pch-windows::{processes,process_control,services,startup,connections}` |
-| hardware-monitor / sensor-providers | `pch_core::HardwareSensorProvider`, `pch-windows::{thermal,energy,adlx,nvml,storage_health}`, `pch_core::sensor_map` |
-| gpu-monitor | `pch-windows::gpu` |
-| gaming-monitor / frame-capture | `pch_core::{frames,frame_stats}`, `pch-windows::presentmon`, `src-tauri/src/gaming.rs` |
-| crash-monitor / event-log-reader | `pch-windows::eventlog`, `pch_core::events`, `src-tauri/src/events_watch.rs` |
-| bsod-analyzer | `pch_core::{events::group_shutdown_incidents, codes}`, `pch-windows::debugger` |
-| diagnostic-engine | `pch_core::diagnostics` |
-| alert-engine | `pch_core::alerts`, `src-tauri/src/notify.rs` |
+| system-telemetry | `veyl-windows::{cpu,memory,disk,network,system_info}` |
+| process-monitor | `veyl-windows::{processes,process_control,services,startup,connections}` |
+| hardware-monitor / sensor-providers | `veyl_core::HardwareSensorProvider`, `veyl-windows::{thermal,energy,adlx,nvml,storage_health}`, `veyl_core::sensor_map` |
+| gpu-monitor | `veyl-windows::gpu` |
+| gaming-monitor / frame-capture | `veyl_core::{frames,frame_stats}`, `veyl-windows::presentmon`, `src-tauri/src/gaming.rs` |
+| crash-monitor / event-log-reader | `veyl-windows::eventlog`, `veyl_core::events`, `src-tauri/src/events_watch.rs` |
+| bsod-analyzer | `veyl_core::{events::group_shutdown_incidents, codes}`, `veyl-windows::debugger` |
+| diagnostic-engine | `veyl_core::diagnostics` |
+| alert-engine | `veyl_core::alerts`, `src-tauri/src/notify.rs` |
 | history-storage | `crates/history-storage` |
-| export-service | `src-tauri/src/export.rs`, `src-tauri/src/commands/export.rs`, `pch_core::redact` |
+| export-service | `src-tauri/src/export.rs`, `src-tauri/src/commands/export.rs`, `veyl_core::redact` |
 | settings | `src-tauri/src/settings.rs` |
 
 ## Data flow
@@ -101,7 +101,7 @@ log handles, mapped views, process handles).
   Zero is shown only when zero was measured.
 - Field names carry units (`_bytes`, `_bps`, `_pct`, `_mhz`, `_c`, `_ms`).
 - Windows events are stored raw (channel, record id, provider, id, level, data) and
-  classified on read by `pch_core::events::classify`, which validates channel,
+  classified on read by `veyl_core::events::classify`, which validates channel,
   provider **and** event ID. Improving the classifier needs no data migration.
 - The XPath queries sent to the Event Log service are generated from the same rule
   table the classifier uses (`xpath_for_channel`).

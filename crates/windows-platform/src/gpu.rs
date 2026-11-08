@@ -11,7 +11,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use pch_core::{GpuEngineUsage, GpuInfo, GpuSnapshot, GpusSnapshot, Status};
+use veyl_core::{GpuEngineUsage, GpuInfo, GpuSnapshot, GpusSnapshot, Status};
 use windows::Wdk::Graphics::Direct3D::{
     D3DKMTCloseAdapter, D3DKMTOpenAdapterFromLuid, D3DKMTQueryAdapterInfo, D3DKMT_ADAPTER_PERFDATA,
     D3DKMT_ADAPTER_PERFDATACAPS, D3DKMT_CLOSEADAPTER, D3DKMT_NODE_PERFDATA,
@@ -326,7 +326,7 @@ impl GpuSampler {
         }
         if self.adapters.is_empty() {
             snap.status = Status::new(
-                pch_core::Availability::Unsupported,
+                veyl_core::Availability::Unsupported,
                 "No hardware GPU adapter was found",
             );
             return (snap, procs);
@@ -398,7 +398,7 @@ impl GpuSampler {
                 g.util_pct = agg.adapter_util.get(luid).copied();
                 if g.util_pct.is_none() {
                     g.counters_status = Status::new(
-                        pch_core::Availability::Unsupported,
+                        veyl_core::Availability::Unsupported,
                         "No GPU engine counters for this adapter",
                     );
                 }
@@ -434,14 +434,14 @@ impl GpuSampler {
                             // d3dkmthk.h: MemoryFrequency is in hertz.
                             g.memory_clock_mhz = nonzero(p.MemoryFrequency).map(|hz| (hz as f64 / 1e6) as f32);
                             g.sensors_status = if g.temperature_c.is_none() && g.fan_rpm.is_none() && g.power_pct.is_none() {
-                                Status::new(pch_core::Availability::Unsupported, "The GPU driver does not report temperature, fan or power to Windows")
+                                Status::new(veyl_core::Availability::Unsupported, "The GPU driver does not report temperature, fan or power to Windows")
                             } else {
                                 Status::available()
                             };
                         }
                         Err(code) => {
                             g.sensors_status = Status::new(
-                                pch_core::Availability::Unsupported,
+                                veyl_core::Availability::Unsupported,
                                 format!("D3DKMTQueryAdapterInfo(ADAPTERPERFDATA) failed (0x{code:08X}); requires a WDDM 2.4+ driver"),
                             )
                         }

@@ -254,7 +254,7 @@ export default function Gaming() {
             <div className="flex flex-col gap-2 text-[12.5px]">
               <StatusNote status={live?.providerStatus} always />
               <p className="text-muted">
-                PC Health Console measures FPS with Intel PresentMon, which reads the presentation events Windows already records (DirectX 9–12, Vulkan and OpenGL via the graphics kernel). Nothing is injected into games, so anti-cheat systems are not affected. PresentMon is free and MIT-licensed but is not bundled.
+                Veyl measures FPS with Intel PresentMon, which reads the presentation events Windows already records (DirectX 9–12, Vulkan and OpenGL via the graphics kernel). Nothing is injected into games, so anti-cheat systems are not affected. PresentMon is free and MIT-licensed but is not bundled.
               </p>
               <ol className="list-decimal pl-5 text-muted">
                 <li>Download the PresentMon console application (PresentMon-x.y.z-x64.exe) from github.com/GameTechDev/PresentMon/releases.</li>

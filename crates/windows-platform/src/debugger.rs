@@ -249,7 +249,7 @@ pub fn analyze(
     }
     if let Err(e) = std::fs::File::open(dump) {
         return Err(if e.kind() == std::io::ErrorKind::PermissionDenied {
-            "Reading this dump requires administrator rights. Restart PC Health Console as administrator to analyze it.".into()
+            "Reading this dump requires administrator rights. Restart Veyl as administrator to analyze it.".into()
         } else {
             format!("Cannot open the dump: {e}")
         });

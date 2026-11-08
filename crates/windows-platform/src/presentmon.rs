@@ -18,10 +18,10 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
 
-use pch_core::frames::{FrameMetricsProvider, FramePoll, FrameRecord};
-use pch_core::{Availability, Status};
+use veyl_core::frames::{FrameMetricsProvider, FramePoll, FrameRecord};
+use veyl_core::{Availability, Status};
 
-pub const SESSION_NAME: &str = "PCHealthConsole";
+pub const SESSION_NAME: &str = "Veyl";
 /// Frames buffered between polls; older frames are dropped (and counted) beyond this.
 const BUFFER_CAP: usize = 200_000;
 /// windows.h CREATE_NO_WINDOW: do not flash a console window.

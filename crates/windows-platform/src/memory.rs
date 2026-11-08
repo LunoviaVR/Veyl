@@ -1,6 +1,6 @@
 //! Physical and committed memory.
 
-use pch_core::{MemorySnapshot, Status};
+use veyl_core::{MemorySnapshot, Status};
 use windows::Win32::System::ProcessStatus::{GetPerformanceInfo, PERFORMANCE_INFORMATION};
 use windows::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
 

@@ -8,7 +8,7 @@
 
 use std::collections::HashSet;
 
-use pch_core::{
+use veyl_core::{
     Availability, HardwareSensorProvider, ProviderPoll, SensorCategory, SensorKind, SensorReading,
     Status,
 };
@@ -120,7 +120,7 @@ impl HardwareSensorProvider for EnergyMeterProvider {
                 category,
                 kind: SensorKind::Power,
                 label: label.into(),
-                unit: pch_core::unit::WATT.into(),
+                unit: veyl_core::unit::WATT.into(),
                 // The Energy Meter Power counter is in milliwatts.
                 value: Some(mw / 1000.0),
                 timestamp_ms: now_ms,

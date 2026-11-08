@@ -1,9 +1,9 @@
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
-use pch_core::{DriveHealth, SensorsView};
 use serde::Serialize;
 use tauri::State;
+use veyl_core::{DriveHealth, SensorsView};
 
 use crate::state::AppState;
 

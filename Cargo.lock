@@ -2673,63 +2673,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pc-health-console"
-version = "0.1.0"
-dependencies = [
- "parking_lot",
- "pch-core",
- "pch-storage",
- "pch-windows",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-notification",
- "tauri-plugin-opener",
- "tauri-plugin-single-instance",
- "tauri-plugin-updater",
- "tauri-plugin-window-state",
- "thiserror 2.0.21",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "pch-core"
-version = "0.1.0"
-dependencies = [
- "roxmltree",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "pch-storage"
-version = "0.1.0"
-dependencies = [
- "pch-core",
- "rusqlite",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "tracing",
-]
-
-[[package]]
-name = "pch-windows"
-version = "0.1.0"
-dependencies = [
- "pch-core",
- "serde",
- "thiserror 2.0.21",
- "tracing",
- "windows",
-]
-
-[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4857,6 +4800,63 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "veyl"
+version = "0.1.0"
+dependencies = [
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-notification",
+ "tauri-plugin-opener",
+ "tauri-plugin-single-instance",
+ "tauri-plugin-updater",
+ "tauri-plugin-window-state",
+ "thiserror 2.0.21",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "veyl-core",
+ "veyl-storage",
+ "veyl-windows",
+]
+
+[[package]]
+name = "veyl-core"
+version = "0.1.0"
+dependencies = [
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "veyl-storage"
+version = "0.1.0"
+dependencies = [
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tracing",
+ "veyl-core",
+]
+
+[[package]]
+name = "veyl-windows"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.21",
+ "tracing",
+ "veyl-core",
+ "windows",
+]
 
 [[package]]
 name = "vswhom"

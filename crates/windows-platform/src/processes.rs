@@ -9,9 +9,9 @@
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
-use pch_core::rate::{per_second, share_pct};
-use pch_core::time::filetime_to_unix_ms;
-use pch_core::{ProcessRow, ProcessTable, SelfUsage, Status};
+use veyl_core::rate::{per_second, share_pct};
+use veyl_core::time::filetime_to_unix_ms;
+use veyl_core::{ProcessRow, ProcessTable, SelfUsage, Status};
 use windows::Wdk::System::SystemInformation::{NtQuerySystemInformation, SystemProcessInformation};
 use windows::Win32::Foundation::NTSTATUS;
 use windows::Win32::System::Threading::{

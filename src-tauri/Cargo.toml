@@ -1,26 +1,26 @@
 [package]
-name = "pc-health-console"
-description = "PC Health Console"
+name = "veyl"
+description = "Veyl"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
 [lib]
-name = "pc_health_console_lib"
+name = "veyl_lib"
 crate-type = ["rlib"]
 
 [[bin]]
-name = "pc-health-console"
+name = "veyl"
 path = "src/main.rs"
 
 [build-dependencies]
 tauri-build = { version = "2.7", features = [] }
 
 [dependencies]
-pch-core.workspace = true
-pch-windows.workspace = true
-pch-storage.workspace = true
+veyl-core.workspace = true
+veyl-windows.workspace = true
+veyl-storage.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

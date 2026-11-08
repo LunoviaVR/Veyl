@@ -1,10 +1,10 @@
 use std::sync::atomic::Ordering;
 
-use pch_core::{SystemInfo, TelemetryFrame};
-use pch_storage::DbStats;
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_opener::OpenerExt;
+use veyl_core::{SystemInfo, TelemetryFrame};
+use veyl_storage::DbStats;
 
 use super::CmdResult;
 use crate::state::{AppState, ChannelStatus};
@@ -59,7 +59,7 @@ pub fn get_runtime_status(app: AppHandle, state: State<'_, AppState>) -> Runtime
 /// Restarts the application elevated after an explicit user request (UAC prompt).
 #[tauri::command(async)]
 pub fn restart_as_admin(app: AppHandle) -> CmdResult<()> {
-    pch_windows::elevation::relaunch_elevated("--elevated")?;
+    veyl_windows::elevation::relaunch_elevated("--elevated")?;
     // The single-instance lock is released when this instance exits.
     app.exit(0);
     Ok(())
