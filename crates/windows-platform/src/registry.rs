@@ -2,8 +2,8 @@
 
 use windows::Win32::Foundation::{ERROR_MORE_DATA, ERROR_NO_MORE_ITEMS, ERROR_SUCCESS};
 use windows::Win32::System::Registry::{
-    RegCloseKey, RegEnumValueW, RegGetValueW, RegOpenKeyExW, HKEY, KEY_READ, REG_SAM_FLAGS,
-    RRF_RT_REG_DWORD, RRF_RT_REG_SZ,
+    RegCloseKey, RegEnumKeyExW, RegEnumValueW, RegGetValueW, RegOpenKeyExW, HKEY, KEY_READ,
+    REG_SAM_FLAGS, RRF_RT_REG_DWORD, RRF_RT_REG_SZ,
 };
 
 use crate::handle::{from_wide, wide};
@@ -86,6 +86,50 @@ impl RegValue {
 }
 
 /// Enumerates all values of `subkey`. Missing key → `Ok(empty)`; other failures → `Err(code)`.
+/// Names of the direct subkeys of `subkey`; empty when it does not exist or cannot be read.
+pub fn subkeys(root: HKEY, subkey: &str) -> Vec<String> {
+    let sk = wide(subkey);
+    let mut key = HKEY::default();
+    // SAFETY: out-pointer to a local; key closed below.
+    let rc = unsafe {
+        RegOpenKeyExW(
+            root,
+            windows::core::PCWSTR(sk.as_ptr()),
+            None,
+            KEY_READ,
+            &mut key,
+        )
+    };
+    if rc != ERROR_SUCCESS {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut name = vec![0u16; 256]; // key names are at most 255 characters
+    for index in 0.. {
+        let mut len = name.len() as u32;
+        // SAFETY: buffer sized as passed; key is open.
+        let rc = unsafe {
+            RegEnumKeyExW(
+                key,
+                index,
+                Some(windows::core::PWSTR(name.as_mut_ptr())),
+                &mut len,
+                None,
+                None,
+                None,
+                None,
+            )
+        };
+        if rc != ERROR_SUCCESS {
+            break; // ERROR_NO_MORE_ITEMS, or a key that vanished while listing
+        }
+        out.push(String::from_utf16_lossy(&name[..len as usize]));
+    }
+    // SAFETY: key opened above.
+    let _ = unsafe { RegCloseKey(key) };
+    out
+}
+
 pub fn enum_values(root: HKEY, subkey: &str, extra: REG_SAM_FLAGS) -> Result<Vec<RegValue>, u32> {
     let sk = wide(subkey);
     let mut key = HKEY::default();

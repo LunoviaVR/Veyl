@@ -4,12 +4,14 @@ import type { AlignedData } from "uplot";
 import { useNav } from "../App";
 import { Chart, useThemeKey } from "../components/Chart";
 import { type Column, DataTable, type SortState, sortRows } from "../components/DataTable";
-import { Badge, Button, cn, Empty, ErrorNote, Fields, Kpi, Modal, PageHeader, Panel, StatusNote, Switch } from "../components/ui";
+import { Badge, Button, cn, Empty, ErrorNote, Fields, Kpi, Modal, PageHeader, Panel, Select, StatusNote, Switch } from "../components/ui";
 import * as f from "../lib/format";
 import { useQuery } from "../lib/hooks";
 import { api, errorText } from "../lib/ipc";
 import { useLive } from "../lib/live";
-import type { FrameStats, SessionRow } from "../lib/types";
+import type { FrameStats, OverlaySettings, SessionRow } from "../lib/types";
+import { busiestGpu, OVERLAY_DESIGNS, OVERLAY_POSITIONS, OVERLAY_THEMES, placement, readings } from "../overlay/ovl";
+import { OvlView, useOvl } from "../overlay/OvlView";
 
 /** Reduces a long frame-time series for plotting, keeping each bucket's worst frame so spikes stay visible. */
 export function downsampleFrames(ft: number[], maxPoints: number): { x: number[]; y: number[] } {
@@ -152,6 +154,68 @@ function CompareModal({ a, b, onClose }: { a: SessionRow; b: SessionRow; onClose
   );
 }
 
+/** Design, theme and position pickers with a live preview drawn exactly like the in-game overlay. */
+function OverlayStyle({ overlay, onPick, onPosition }: { overlay: OverlaySettings; onPick: (design: string, theme: string) => void; onPosition: (position: string) => void }) {
+  const { design, theme, position } = overlay;
+  const ovl = useOvl(design, theme);
+  const frame = useLive((s) => s.frame);
+  const ring = useLive((s) => s.ring);
+  const gaming = useLive((s) => s.gaming);
+  const graphs = {
+    "CPU usage": ring.map((r) => r.cpu.totalPct ?? 0),
+    "GPU1 usage": ring.map((r) => busiestGpu(r)?.utilPct ?? 0),
+    Frametime: gaming?.capturing ? gaming.recentFrametimes : [],
+  };
+  return (
+    <Panel
+      title="Overlay style"
+      actions={
+        <>
+          <Select label="Overlay design" value={design} onChange={(d) => onPick(d, theme)} options={OVERLAY_DESIGNS.map((d) => ({ value: d.id, label: d.label }))} />
+          <div role="radiogroup" aria-label="Overlay theme" className="flex">
+            {OVERLAY_THEMES.map((t) => (
+              <Button key={t.id} role="radio" aria-checked={t.id === theme} variant={t.id === theme ? "primary" : "default"} className="rounded-none first:rounded-l-md last:rounded-r-md -ml-px" onClick={() => onPick(design, t.id)}>
+                {t.label}
+              </Button>
+            ))}
+          </div>
+        </>
+      }
+    >
+      <div className="flex gap-3">
+        <div className="flex flex-col gap-1.5 shrink-0">
+          <span className="text-[12px] text-muted">Position on the game</span>
+          <div role="radiogroup" aria-label="Overlay position" className="grid grid-cols-3 gap-1 p-1 rounded-md border border-line-strong bg-raised w-fit">
+            {OVERLAY_POSITIONS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                role="radio"
+                aria-checked={p.id === position}
+                aria-label={p.label}
+                title={p.label}
+                className={cn("size-6 rounded-sm transition-colors", p.id === position ? "bg-accent" : "bg-line-strong/60 hover:bg-line-strong")}
+                onClick={() => onPosition(p.id)}
+              />
+            ))}
+          </div>
+        </div>
+        {/* The game window: a sky-and-ground backdrop so see-through themes look as they do in a game, with the overlay at the chosen spot. */}
+        <div className="flex-1 min-w-0 h-64 rounded-md overflow-hidden flex p-4" style={{ background: "linear-gradient(180deg, #5d7fb3 0%, #9db3cf 58%, #45603f 58%, #2c3c2b 100%)", ...placement(position) }}>
+          {ovl && (
+            <div style={{ zoom: Math.min(1, 560 / ovl.box.w, 220 / ovl.box.h) }}>
+              <OvlView ovl={ovl} design={design} theme={theme} values={readings(frame, gaming)} graphs={graphs} now={new Date()} />
+            </div>
+          )}
+        </div>
+      </div>
+      <p className="text-[11.5px] text-faint mt-2">
+        Designs from Apple-Style RTSS Overlays by realHfde (MIT), set in Inter. Values Veyl cannot read, such as VRAM temperature, show a dash.
+      </p>
+    </Panel>
+  );
+}
+
 export default function Gaming() {
   const { params, go, settings, refreshSettings } = useNav();
   const live = useLive((s) => s.gaming);
@@ -163,6 +227,16 @@ export default function Gaming() {
   const [compare, setCompare] = useState<number[]>([]);
   const [showCompare, setShowCompare] = useState(false);
   const [sort, setSort] = useState<SortState | null>({ id: "date", desc: true });
+  const release = useQuery(() => api.presentmonRelease(), []);
+  // On success the provider status turns available and this panel disappears.
+  const [install, setInstall] = useState<{ kind: "idle" } | { kind: "installing" } | { kind: "failed"; error: string }>({ kind: "idle" });
+  const runInstall = () => {
+    setInstall({ kind: "installing" });
+    api.installPresentmon().then(
+      () => setInstall({ kind: "idle" }),
+      (e) => setInstall({ kind: "failed", error: errorText(e) }),
+    );
+  };
 
   useEffect(() => {
     if (params.pid && !live?.capturing) api.startCapture(Number(params.pid)).catch((e) => setError(errorText(e)));
@@ -232,19 +306,34 @@ export default function Gaming() {
         title="Gaming"
         subtitle="Frame-time capture from real presentation events via Intel PresentMon"
         actions={
-          <label className="flex items-center gap-2 text-[12.5px]">
-            Overlay
-            <Switch
-              label="Game overlay"
-              checked={!!settings?.overlay.enabled}
-              onChange={(v) =>
-                api
-                  .setOverlayEnabled(v)
-                  .then(refreshSettings)
-                  .catch((e) => setError(errorText(e)))
-              }
-            />
-          </label>
+          <>
+            <label className="flex items-center gap-2 text-[12.5px]" title="Start the FPS capture by itself when a game is running">
+              Auto-start for games
+              <Switch
+                label="Auto-start capture for games"
+                checked={!!settings?.autoCaptureGames}
+                onChange={(v) =>
+                  api
+                    .setAutoCaptureGames(v)
+                    .then(refreshSettings)
+                    .catch((e) => setError(errorText(e)))
+                }
+              />
+            </label>
+            <label className="flex items-center gap-2 text-[12.5px]" title="Shown only while a game is the active window">
+              Overlay
+              <Switch
+                label="Game overlay"
+                checked={!!settings?.overlay.enabled}
+                onChange={(v) =>
+                  api
+                    .setOverlayEnabled(v)
+                    .then(refreshSettings)
+                    .catch((e) => setError(errorText(e)))
+                }
+              />
+            </label>
+          </>
         }
       />
       <div className="px-5 pb-5 flex flex-col gap-3">
@@ -254,19 +343,33 @@ export default function Gaming() {
             <div className="flex flex-col gap-2 text-[12.5px]">
               <StatusNote status={live?.providerStatus} always />
               <p className="text-muted">
-                Veyl measures FPS with Intel PresentMon, which reads the presentation events Windows already records (DirectX 9–12, Vulkan and OpenGL via the graphics kernel). Nothing is injected into games, so anti-cheat systems are not affected. PresentMon is free and MIT-licensed but is not bundled.
+                Veyl measures FPS with Intel PresentMon, which reads the presentation events Windows already records (DirectX 9–12, Vulkan and OpenGL via the graphics kernel). Nothing is injected into games, so anti-cheat systems are not affected. PresentMon is free and MIT-licensed.
               </p>
-              <ol className="list-decimal pl-5 text-muted">
-                <li>Download the PresentMon console application (PresentMon-x.y.z-x64.exe) from github.com/GameTechDev/PresentMon/releases.</li>
-                <li>Place it in the tools folder (Windows asks for administrator permission, because it is inside Program Files), or select a copy inside Program Files in Settings → Integrations.</li>
-                <li>Frame capture uses Windows event tracing, which needs administrator rights or membership in the Performance Log Users group.</li>
-              </ol>
-              <div className="flex gap-2">
-                <Button onClick={() => api.openAppFolder("tools")}>
-                  <FolderOpen className="size-3.5" /> Open tools folder
-                </Button>
-                <Button onClick={() => go("settings", { section: "integrations" })}>Settings</Button>
-              </div>
+              {release.data && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button variant="primary" disabled={install.kind === "installing"} onClick={runInstall}>
+                    <Download className="size-3.5" /> {install.kind === "installing" ? "Downloading…" : `Install PresentMon ${release.data.version}`}
+                  </Button>
+                  <span className="text-muted">
+                    Downloads the official Intel release ({f.bytes(release.data.sizeBytes)}) from GitHub, keeps it only if it matches the published checksum, and saves it in Veyl's tools folder.
+                  </span>
+                </div>
+              )}
+              {install.kind === "failed" && <p className="text-bad">{install.error}</p>}
+              <details className="text-muted">
+                <summary className="cursor-pointer">Set it up yourself instead</summary>
+                <ol className="list-decimal pl-5 mt-1">
+                  <li>Download the PresentMon console application (PresentMon-x.y.z-x64.exe) from github.com/GameTechDev/PresentMon/releases.</li>
+                  <li>Place it in the tools folder (Windows asks for administrator permission, because it is inside Program Files), or select a copy inside Program Files in Settings → Integrations.</li>
+                </ol>
+                <div className="flex gap-2 mt-2">
+                  <Button onClick={() => api.openAppFolder("tools")}>
+                    <FolderOpen className="size-3.5" /> Open tools folder
+                  </Button>
+                  <Button onClick={() => go("settings", { section: "integrations" })}>Settings</Button>
+                </div>
+              </details>
+              <p className="text-muted">Frame capture uses Windows event tracing, which needs administrator rights or membership in the Performance Log Users group.</p>
             </div>
           </Panel>
         )}
@@ -276,6 +379,7 @@ export default function Gaming() {
             title={
               <span className="flex items-center gap-2 normal-case tracking-normal text-fg text-[12.5px]">
                 <span className="size-2 rounded-full bg-bad animate-pulse" /> Capturing {live.processName} (PID {live.pid})
+                {live.autoStarted && <Badge tone="info">Started automatically</Badge>}
               </span>
             }
             actions={
@@ -310,7 +414,11 @@ export default function Gaming() {
           </Panel>
         ) : (
           <Panel title="Start a capture">
-            <p className="text-[12.5px] text-muted mb-2">Applications currently using the GPU, and the foreground window. Choose the game to measure.</p>
+            <p className="text-[12.5px] text-muted mb-2">
+              Running games first (from Windows' game list or a Steam, Epic, GOG, EA, Ubisoft or Xbox library), then other applications using the GPU and the foreground window.
+              {settings?.autoCaptureGames ? " Games start capturing by themselves; use Capture for anything else." : " Choose what to measure."}
+              {" "}A game not marked Game? Press Win+G in it and tick "Remember this is a game".
+            </p>
             {live?.providerStatus.state !== "available" && live?.providerStatus.state !== "providerUnavailable" && <StatusNote status={live?.providerStatus} />}
             <div className="flex flex-col divide-y divide-line/60">
               {(candidates.data ?? []).map((c) => (
@@ -318,6 +426,7 @@ export default function Gaming() {
                   <Gamepad2 className="size-4 text-faint" />
                   <span className="font-medium">{c.name}</span>
                   <span className="text-muted tabular">PID {c.pid}</span>
+                  {c.isGame && <Badge tone="ok">Game</Badge>}
                   {c.foreground && <Badge tone="info">Foreground</Badge>}
                   <span className="ml-auto text-muted tabular">GPU {f.pct(c.gpuPct)} · {f.bytes(c.gpuDedicatedBytes)}</span>
                   <Button variant="primary" disabled={!providerOk} onClick={() => api.startCapture(c.pid).catch((e) => setError(errorText(e)))}>
@@ -328,6 +437,24 @@ export default function Gaming() {
               {candidates.data?.length === 0 && <p className="text-muted text-[12.5px] py-2">No application is using the GPU right now.</p>}
             </div>
           </Panel>
+        )}
+
+        {settings && (
+          <OverlayStyle
+            overlay={settings.overlay}
+            onPick={(d, t) =>
+              api
+                .setOverlayStyle(d, t)
+                .then(refreshSettings)
+                .catch((e) => setError(errorText(e)))
+            }
+            onPosition={(p) =>
+              api
+                .setOverlayPosition(p)
+                .then(refreshSettings)
+                .catch((e) => setError(errorText(e)))
+            }
+          />
         )}
 
         <Panel

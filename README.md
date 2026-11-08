@@ -111,6 +111,17 @@ Average FPS, 1 % and 0.1 % lows, 95th and 99th percentile frame times, stutter c
 pacing, with CPU and GPU load and temperatures recorded alongside. You can save sessions,
 compare them, export them to CSV and show an optional in-game overlay. It uses Intel PresentMon,
 which reads the timing events Windows already records, so nothing is injected into the game.
+Capture starts by itself when a game is running and stops when it closes. The overlay sits on
+the game's window (any corner, the middle of an edge or the centre), follows it, and shows only
+while that game is the active window. A game is anything on Windows' Game Bar list or a program
+with a window that runs from a Steam, Epic, GOG, EA, Ubisoft or Xbox library. Missed one? Press
+Win+G in the game and tick "Remember this is a game".
+
+Pick the overlay's look on the Gaming page: 17 designs (Sleek Compact, Sleek Rings, Sleek Side,
+Performance, laptop and TV layouts and more) in Dark, Smoke, Float or White, from
+[Apple-Style RTSS Overlays](https://github.com/realHfde/Apple-Style-Inspired-RTSS-Overlay) by
+realHfde (MIT). Veyl draws them itself with its own readings, so RivaTuner and Afterburner are not
+needed; the Inter font they are set in is bundled.
 
 ### Performance history and CSV export
 
@@ -172,7 +183,7 @@ keeps working.
 | Add-on | What it adds | How to get it |
 |---|---|---|
 | [PawnIO](https://pawnio.eu) (open source, Microsoft-signed) | CPU temperatures (Intel); motherboard fans, voltages and temperatures (Nuvoton) | Install PawnIO. Veyl ships only PawnIO's official signed modules, never the driver. |
-| [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Put the console app (`PresentMon-x.y.z-x64.exe`) in the `tools` folder inside Veyl's Program Files folder (**Settings → Integrations → Tools folder**). |
+| [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Click **Install PresentMon** on the Gaming page: Veyl downloads Intel's official release from GitHub, keeps it only if it matches the published checksum, and saves it in its `tools` folder. Or place the console app there yourself. |
 | Debugging Tools for Windows | Blue screen dump analysis (`!analyze -v`) | Install "Debugging Tools for Windows" from the Windows SDK installer. Veyl finds it automatically. |
 | Microsoft symbol server | Named functions and modules in dump analysis | Off by default. Turn it on in **Settings → Integrations**. Only symbol files are downloaded; dumps never leave your PC. |
 
@@ -180,8 +191,8 @@ keeps working.
 
 - **No telemetry, no account, no cloud.** History, settings and logs stay in
   `%LOCALAPPDATA%\app.veyl.monitor`.
-- **Network requests:** only the update check (can be turned off) and the optional symbol
-  downloads.
+- **Network requests:** only the update check (can be turned off), the optional symbol
+  downloads, and the PresentMon download when you click **Install PresentMon**.
 - **Exports** are written only to files you choose, with optional removal of your user name,
   profile path, computer name, account IDs (SIDs) and drive serial numbers.
 - **Packet captures** stay in memory, are never written to disk, and are cleared when you start a
@@ -241,7 +252,7 @@ No. There is no telemetry and no account, and all data stays on your PC.
 | CPU "Package temp —" | Windows exposes CPU die temperatures only to kernel drivers. Install PawnIO. |
 | GPU hotspot "not reported" | Shown for AMD (ADLX) and NVIDIA (NVML) GPUs when the driver reports it; Windows alone reports only the edge temperature. |
 | GPU power "not reported" | Your driver does not report power to Windows (common on AMD). |
-| Gaming: "PresentMon not found" | Put `PresentMon-x.y.z-x64.exe` in the tools folder inside Veyl's Program Files folder. |
+| Gaming: "PresentMon not found" | Click **Install PresentMon** on the Gaming page, or put `PresentMon-x.y.z-x64.exe` in the tools folder inside Veyl's Program Files folder. |
 | Network: "needs administrator rights" | Start Veyl from the Start menu (it runs as administrator), or add your account to *Performance Log Users*. |
 | No dump files listed | Windows keeps minidumps only when *Startup and Recovery → Write debugging information* is on, and deletes old ones itself. |
 | History empty for a period | Veyl wasn't running then; gaps are shaded, never filled in. |

@@ -2,7 +2,7 @@
 //! times, computes live statistics, samples system context once per second, and
 //! stores the finished session.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::Ordering;
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
@@ -13,14 +13,19 @@ use veyl_core::frame_stats::{compute, FrameStats, FrameStatsConfig};
 use veyl_core::frames::{FrameMetricsProvider, FrameRecord};
 use veyl_core::{Availability, Status};
 use veyl_storage::NewSession;
+use veyl_windows::games::Games;
 use veyl_windows::presentmon::{find_presentmon, PresentMonCli};
 
 use crate::state::{now_ms, AppState};
 use crate::writer::WriteMsg;
 
 pub enum GamingCommand {
-    Start { pid: u32 },
+    Start {
+        pid: u32,
+    },
     Stop,
+    /// Re-check whether PresentMon is available (after it was installed).
+    Refresh,
 }
 
 /// Window used for live statistics.
@@ -65,11 +70,15 @@ pub struct GamingLive {
     pub recent_frametimes: Vec<f32>,
     pub context: Option<ContextPoint>,
     pub last_saved_session: Option<i64>,
+    /// The capture was started automatically for a detected game.
+    pub auto_started: bool,
 }
 
 #[derive(Default)]
 struct Session {
     pid: u32,
+    /// (pid, process start time): identifies the process across PID reuse.
+    key: (u32, Option<i64>),
     name: String,
     path: Option<String>,
     started_ms: i64,
@@ -212,6 +221,29 @@ fn provider_status(state: &AppState) -> (Option<std::path::PathBuf>, Status) {
     }
 }
 
+/// The running game to auto-capture: the one in front first, otherwise any, skipping
+/// processes the user stopped or whose capture failed or ended.
+fn pick_game<'a>(
+    running: &[&'a veyl_core::ProcessRow],
+    fg: Option<u32>,
+    skip: &HashSet<(u32, Option<i64>)>,
+) -> Option<&'a veyl_core::ProcessRow> {
+    running
+        .iter()
+        .copied()
+        .filter(|r| !skip.contains(&(r.pid, r.start_time_ms)))
+        .max_by_key(|r| Some(r.pid) == fg)
+}
+
+/// Whether the captured process (pid, start time) is still in the process list.
+/// An empty list means no sample yet, not that everything exited.
+fn still_running(rows: &[veyl_core::ProcessRow], key: (u32, Option<i64>)) -> bool {
+    rows.is_empty()
+        || rows
+            .iter()
+            .any(|r| r.pid == key.0 && (key.1.is_none() || r.start_time_ms == key.1))
+}
+
 pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
     let state = app.state::<AppState>();
     let mut provider: Option<PresentMonCli> = None;
@@ -220,15 +252,76 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
     let mut last_context = Instant::now();
     let mut last_saved = None;
     let mut status = provider_status(&state).1;
+    // Reloaded because Windows and the stores add games as they are installed or first run.
+    let mut games = Games::load();
+    let mut games_loaded = Instant::now();
+    let mut last_scan = Instant::now();
+    // Processes not to auto-capture again: stopped by the user, or the capture failed or ended.
+    let mut no_auto: HashSet<(u32, Option<i64>)> = HashSet::new();
+    let mut auto_started = false;
+    let mut game_pids: Vec<u32> = Vec::new();
 
     loop {
-        let cmd = match rx.recv_timeout(Duration::from_millis(250)) {
+        let mut cmd = match rx.recv_timeout(Duration::from_millis(250)) {
             Ok(c) => Some(c),
             Err(RecvTimeoutError::Timeout) => None,
             Err(RecvTimeoutError::Disconnected) => break,
         };
         if state.shutdown.load(Ordering::Relaxed) {
             break;
+        }
+        if cmd.is_some() {
+            auto_started = false;
+        }
+        let mut target_closed = false;
+        let fg_window = veyl_windows::elevation::foreground_window();
+        let fg = fg_window.map(|(pid, _)| pid);
+        if last_scan.elapsed() >= Duration::from_secs(1) {
+            last_scan = Instant::now();
+            if games_loaded.elapsed() >= Duration::from_secs(60) {
+                games = Games::load();
+                games_loaded = Instant::now();
+            }
+            let table = state.live.read().processes.clone();
+            let running: Vec<&veyl_core::ProcessRow> = table
+                .rows
+                .iter()
+                .filter(|r| {
+                    r.path.as_deref().is_some_and(|p| {
+                        games.is_game(p, table.app_pids.binary_search(&r.pid).is_ok())
+                    })
+                })
+                .collect();
+            no_auto.retain(|k| table.rows.iter().any(|r| (r.pid, r.start_time_ms) == *k));
+            // PresentMon's own exit-on-close is not reliable, so watch the process too.
+            target_closed = session
+                .as_ref()
+                .is_some_and(|s| !still_running(&table.rows, s.key));
+            game_pids = running.iter().map(|r| r.pid).collect();
+
+            let usable = status.state != Availability::ProviderUnavailable;
+            if cmd.is_none()
+                && session.is_none()
+                && usable
+                && state.settings.read().auto_capture_games
+            {
+                if let Some(r) = pick_game(&running, fg, &no_auto) {
+                    tracing::info!("auto-capturing {} ({})", r.name, r.pid);
+                    cmd = Some(GamingCommand::Start { pid: r.pid });
+                    auto_started = true;
+                }
+            }
+        }
+        // Checked every pass (not every scan) so the overlay follows a moving game window.
+        let game_window = fg_window
+            .filter(|(pid, _)| game_pids.contains(pid))
+            .map(|(_, r)| r);
+        if *state.game_window.read() != game_window {
+            *state.game_window.write() = game_window;
+            if let Some(w) = app.get_webview_window(crate::overlay::LABEL) {
+                let cfg = state.settings.read().overlay.clone();
+                crate::overlay::follow_game(&w, &cfg, game_window);
+            }
         }
         let cfg = FrameStatsConfig {
             stutter_factor: state.settings.read().stutter_factor,
@@ -244,13 +337,14 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
                 let (exe, st) = provider_status(&state);
                 status = st;
                 if let Some(exe) = exe {
-                    let (name, path) = {
+                    let (name, path, started) = {
                         let live = state.live.read();
                         let row = live.processes.rows.iter().find(|r| r.pid == pid);
                         (
                             row.map(|r| r.name.clone())
                                 .unwrap_or_else(|| format!("PID {pid}")),
                             row.and_then(|r| r.path.clone()),
+                            row.and_then(|r| r.start_time_ms),
                         )
                     };
                     let mut p = PresentMonCli::new(exe);
@@ -258,6 +352,7 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
                         Ok(()) => {
                             session = Some(Session {
                                 pid,
+                                key: (pid, started),
                                 name,
                                 path,
                                 started_ms: now_ms(),
@@ -266,15 +361,21 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
                             provider = Some(p);
                             status = Status::waiting("Starting PresentMon…");
                         }
-                        Err(e) => status = Status::error(e),
+                        Err(e) => {
+                            status = Status::error(e);
+                            no_auto.insert((pid, started)); // never retry a failed start in a loop
+                        }
                     }
                 }
             }
+            Some(GamingCommand::Refresh) if session.is_none() => status = provider_status(&state).1,
+            Some(GamingCommand::Refresh) => {}
             Some(GamingCommand::Stop) => {
                 if let Some(mut p) = provider.take() {
                     p.stop();
                 }
                 if let Some(s) = session.take() {
+                    no_auto.insert(s.key); // the user stopped it: do not start it again
                     last_saved = finalize(&app, &state, s, &cfg).or(last_saved);
                 }
                 status = provider_status(&state).1;
@@ -290,11 +391,19 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
                     s.push(f);
                 }
             }
-            let ended = matches!(
-                poll.status.state,
-                Availability::Stale | Availability::Error | Availability::PermissionRequired
-            );
-            status = poll.status;
+            let ended = target_closed
+                || matches!(
+                    poll.status.state,
+                    Availability::Stale | Availability::Error | Availability::PermissionRequired
+                );
+            status = if target_closed {
+                Status::new(
+                    Availability::Stale,
+                    format!("Capture ended: {} closed", s.name),
+                )
+            } else {
+                poll.status
+            };
             if last_context.elapsed() >= Duration::from_secs(1)
                 && s.context.len() < MAX_CONTEXT_SECONDS
             {
@@ -306,6 +415,8 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
             if ended {
                 provider = None;
                 if let Some(s) = session.take() {
+                    tracing::info!("capture of {} ended ({} frames)", s.name, s.total);
+                    no_auto.insert(s.key); // forgotten once the process exits
                     last_saved = finalize(&app, &state, s, &cfg).or(last_saved);
                 }
             }
@@ -321,6 +432,7 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
             };
             if let Some(s) = &session {
                 live.capturing = true;
+                live.auto_started = auto_started;
                 live.pid = Some(s.pid);
                 live.process_name = Some(s.name.clone());
                 live.exe_path = s.path.clone();
@@ -376,6 +488,57 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn auto_capture_prefers_the_game_in_front_and_skips_stopped_ones() {
+        let row = |pid: u32| veyl_core::ProcessRow {
+            pid,
+            start_time_ms: Some(i64::from(pid)),
+            ..Default::default()
+        };
+        let (a, b) = (row(10), row(20));
+        let running = [&a, &b];
+        let none = HashSet::new();
+        assert_eq!(
+            pick_game(&running, Some(10), &none).map(|r| r.pid),
+            Some(10)
+        );
+        assert_eq!(
+            pick_game(&running, Some(20), &none).map(|r| r.pid),
+            Some(20)
+        );
+        assert!(
+            pick_game(&running, None, &none).is_some(),
+            "a background game still counts"
+        );
+        let stopped: HashSet<_> = [(20, Some(20))].into();
+        assert_eq!(
+            pick_game(&running, Some(20), &stopped).map(|r| r.pid),
+            Some(10),
+            "a stopped game is not restarted"
+        );
+        let both: HashSet<_> = [(10, Some(10)), (20, Some(20))].into();
+        assert!(pick_game(&running, Some(20), &both).is_none());
+        assert!(pick_game(&[], Some(1), &none).is_none());
+    }
+
+    #[test]
+    fn capture_target_is_gone_only_when_missing_from_a_real_list() {
+        let row = veyl_core::ProcessRow {
+            pid: 10,
+            start_time_ms: Some(5),
+            ..Default::default()
+        };
+        let rows = [row];
+        assert!(still_running(&rows, (10, Some(5))));
+        assert!(still_running(&rows, (10, None)), "start time unknown");
+        assert!(
+            !still_running(&rows, (10, Some(6))),
+            "PID reused by a new process"
+        );
+        assert!(!still_running(&rows, (11, Some(5))));
+        assert!(still_running(&[], (11, Some(5))), "no sample yet");
+    }
 
     fn rec(chain: &str, ft: f64) -> FrameRecord {
         FrameRecord {

@@ -121,6 +121,27 @@ pub fn valid_presentmon_path(p: &Path) -> bool {
             .is_some_and(|n| n.starts_with("presentmon") && n.ends_with(".exe"))
 }
 
+/// The PresentMon console release Veyl installs when the user asks (Intel, MIT,
+/// github.com/GameTechDev/PresentMon). Size and SHA-256 are GitHub's published values.
+pub const PINNED_VERSION: &str = "2.6.0";
+pub const PINNED_URL: &str =
+    "https://github.com/GameTechDev/PresentMon/releases/download/v2.6.0/PresentMon-2.6.0-x64.exe";
+pub const PINNED_SIZE: u64 = 980_320;
+pub const PINNED_SHA256: &str = "b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af";
+
+/// Downloads the pinned PresentMon into `tools_dir` after checking its checksum.
+pub fn install_pinned(tools_dir: &Path) -> Result<PathBuf, String> {
+    std::fs::create_dir_all(tools_dir).map_err(|e| {
+        format!(
+            "Could not create {} ({e}); this needs administrator rights",
+            tools_dir.display()
+        )
+    })?;
+    let dest = tools_dir.join(format!("PresentMon-{PINNED_VERSION}-x64.exe"));
+    crate::download::verified(PINNED_URL, &dest, PINNED_SIZE, PINNED_SHA256)?;
+    Ok(dest)
+}
+
 /// Locates PresentMon: the configured path, then `PresentMon*.exe` in `tools_dir`.
 pub fn find_presentmon(configured: Option<&str>, tools_dir: &Path) -> Option<PathBuf> {
     if let Some(p) = configured.filter(|p| !p.trim().is_empty()) {

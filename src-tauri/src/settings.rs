@@ -36,36 +36,62 @@ impl Default for EventAlerts {
 #[serde(rename_all = "camelCase", default)]
 pub struct OverlaySettings {
     pub enabled: bool,
-    /// topLeft | topRight | bottomLeft | bottomRight
+    /// One of `OVERLAY_POSITIONS`: where the overlay sits on the game's window.
     pub position: String,
     pub scale: f64,
     pub opacity: f64,
-    pub metrics: Vec<String>,
     pub refresh_ms: u32,
-    /// vertical | horizontal
-    pub layout: String,
+    /// One of `OVERLAY_DESIGNS` (a folder under public/overlay-themes).
+    pub design: String,
+    /// One of `OVERLAY_THEMES`.
+    pub theme: String,
 }
+
+/// Bundled overlay designs; must match `OVERLAY_DESIGNS` in src/overlay/ovl.ts.
+pub const OVERLAY_DESIGNS: [&str; 17] = [
+    "essential/sleek-compact",
+    "essential/sleek-rings",
+    "essential/sleek-meters",
+    "essential/sleek-meters-universal",
+    "essential/sleek",
+    "essential/simple-sleek",
+    "essential/sleek-side",
+    "essential/performance",
+    "laptop/card",
+    "laptop/island",
+    "laptop/island-time",
+    "laptop/minibar",
+    "laptop/notch",
+    "tv/box",
+    "tv/line",
+    "tv/pill",
+    "tv/side",
+];
+/// A 3×3 grid over the game's window; must match `OVERLAY_POSITIONS` in src/overlay/ovl.ts.
+pub const OVERLAY_POSITIONS: [&str; 9] = [
+    "topLeft",
+    "topCenter",
+    "topRight",
+    "middleLeft",
+    "center",
+    "middleRight",
+    "bottomLeft",
+    "bottomCenter",
+    "bottomRight",
+];
+/// Dark, Smoke ("clear", its folder name in the source repository), Float, White.
+pub const OVERLAY_THEMES: [&str; 4] = ["dark", "clear", "float", "white"];
 
 impl Default for OverlaySettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            position: "topLeft".into(),
+            position: "topCenter".into(), // where the bundled designs are meant to sit
             scale: 1.0,
             opacity: 0.85,
-            metrics: [
-                "fps",
-                "frametime",
-                "gpuUtil",
-                "gpuTemp",
-                "cpuUtil",
-                "vram",
-                "ram",
-            ]
-            .map(String::from)
-            .to_vec(),
             refresh_ms: 500,
-            layout: "vertical".into(),
+            design: OVERLAY_DESIGNS[0].into(),
+            theme: OVERLAY_THEMES[0].into(),
         }
     }
 }
@@ -93,6 +119,8 @@ pub struct Settings {
     pub stutter_factor: f64,
     pub overlay: OverlaySettings,
     pub export_redact_default: bool,
+    /// Start the FPS capture by itself when a game Windows recognises is running.
+    pub auto_capture_games: bool,
 }
 
 // A positional constructor keeps the default rule table readable as one line per rule.
@@ -248,6 +276,7 @@ impl Default for Settings {
             stutter_factor: 2.5,
             overlay: OverlaySettings::default(),
             export_redact_default: true,
+            auto_capture_games: true,
         }
     }
 }
@@ -287,25 +316,15 @@ impl Settings {
             0.85
         };
         o.refresh_ms = o.refresh_ms.clamp(250, 5000);
-        if !["topLeft", "topRight", "bottomLeft", "bottomRight"].contains(&o.position.as_str()) {
-            o.position = "topLeft".into();
+        if !OVERLAY_POSITIONS.contains(&o.position.as_str()) {
+            o.position = "topCenter".into();
         }
-        if !["vertical", "horizontal"].contains(&o.layout.as_str()) {
-            o.layout = "vertical".into();
+        if !OVERLAY_DESIGNS.contains(&o.design.as_str()) {
+            o.design = OVERLAY_DESIGNS[0].into();
         }
-        const OVERLAY_METRICS: [&str; 9] = [
-            "fps",
-            "frametime",
-            "low1",
-            "gpuUtil",
-            "gpuTemp",
-            "cpuUtil",
-            "cpuTemp",
-            "vram",
-            "ram",
-        ];
-        o.metrics.retain(|m| OVERLAY_METRICS.contains(&m.as_str()));
-        o.metrics.dedup();
+        if !OVERLAY_THEMES.contains(&o.theme.as_str()) {
+            o.theme = OVERLAY_THEMES[0].into();
+        }
         for p in [&mut self.presentmon_path, &mut self.debugger_path] {
             if p.as_deref()
                 .is_some_and(|s| s.trim().is_empty() || s.len() > 1024)
@@ -374,7 +393,8 @@ mod tests {
             ..Default::default()
         };
         s.overlay.opacity = 7.0;
-        s.overlay.metrics = vec!["fps".into(), "evil".into()];
+        s.overlay.design = "../../secrets".into();
+        s.overlay.theme = "neon".into();
         s.alert_rules.push(s.alert_rules[0].clone()); // duplicate id
         let v = s.validated();
         assert_eq!(v.sample_interval_ms, 500);
@@ -382,8 +402,21 @@ mod tests {
         assert_eq!(v.theme, "system");
         assert_eq!(v.stutter_factor, 2.5);
         assert_eq!(v.overlay.opacity, 1.0);
-        assert_eq!(v.overlay.metrics, vec!["fps".to_string()]);
+        assert_eq!(v.overlay.design, OVERLAY_DESIGNS[0]);
+        assert_eq!(v.overlay.theme, OVERLAY_THEMES[0]);
         assert_eq!(v.alert_rules.len(), default_rules().len());
+    }
+
+    #[test]
+    fn every_overlay_design_and_theme_is_bundled() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../public/overlay-themes");
+        for d in OVERLAY_DESIGNS {
+            for t in OVERLAY_THEMES {
+                for f in ["layout.ovl", "atlas.png"] {
+                    assert!(root.join(d).join(t).join(f).is_file(), "{d}/{t}/{f}");
+                }
+            }
+        }
     }
 
     #[test]

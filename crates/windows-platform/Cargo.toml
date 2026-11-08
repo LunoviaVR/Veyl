@@ -9,6 +9,7 @@ license.workspace = true
 [dependencies]
 veyl-core.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
@@ -27,7 +28,10 @@ windows = { version = "0.62", features = [
     "Win32_NetworkManagement_Ndis",
     "Win32_Networking_WinSock",
     "Win32_Security",
+    "Win32_Security_Cryptography",
     "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Com_Urlmon",
     "Win32_System_Diagnostics_Etw",
     "Win32_System_EventLog",
     "Win32_System_IO",

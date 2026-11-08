@@ -8,7 +8,7 @@ use windows::Win32::System::Threading::{
 };
 use windows::Win32::UI::Shell::{ShellExecuteExW, SHELLEXECUTEINFOW};
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetWindowThreadProcessId, SW_SHOWNORMAL,
+    GetForegroundWindow, GetWindowInfo, GetWindowThreadProcessId, SW_SHOWNORMAL, WINDOWINFO,
 };
 
 use std::path::{Path, PathBuf};
@@ -130,6 +130,38 @@ pub fn foreground_pid() -> Option<u32> {
     // SAFETY: valid window handle; out-pointer to a local.
     unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
     (pid != 0).then_some(pid)
+}
+
+/// A window's drawing area (client area) on screen, in physical pixels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ScreenRect {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+}
+
+/// PID and drawing area of the foreground window, if any.
+pub fn foreground_window() -> Option<(u32, ScreenRect)> {
+    let pid = foreground_pid()?;
+    // SAFETY: no preconditions.
+    let hwnd = unsafe { GetForegroundWindow() };
+    let mut info = WINDOWINFO {
+        cbSize: std::mem::size_of::<WINDOWINFO>() as u32,
+        ..Default::default()
+    };
+    // SAFETY: valid window handle; out-pointer to a local with cbSize set.
+    unsafe { GetWindowInfo(hwnd, &mut info) }.ok()?;
+    let c = info.rcClient; // screen coordinates
+    Some((
+        pid,
+        ScreenRect {
+            x: c.left,
+            y: c.top,
+            width: c.right - c.left,
+            height: c.bottom - c.top,
+        },
+    ))
 }
 
 #[cfg(test)]

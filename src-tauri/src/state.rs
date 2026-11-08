@@ -61,6 +61,8 @@ pub struct AppState {
     pub event_channels: RwLock<Vec<ChannelStatus>>,
     pub ui_visible: AtomicBool,
     pub overlay_open: AtomicBool,
+    /// Drawing area of the game in the foreground; the overlay shows only then, over it.
+    pub game_window: RwLock<Option<veyl_windows::elevation::ScreenRect>>,
     pub reset_sensor_stats: AtomicBool,
     pub refresh_drives: AtomicBool,
     pub shutdown: Arc<AtomicBool>,

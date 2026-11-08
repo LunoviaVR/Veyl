@@ -531,12 +531,15 @@ export interface AlertRow {
 
 export interface OverlaySettings {
   enabled: boolean;
-  position: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+  /** One of OVERLAY_POSITIONS (src/overlay/ovl.ts). */
+  position: string;
   scale: number;
   opacity: number;
-  metrics: string[];
   refreshMs: number;
-  layout: "vertical" | "horizontal";
+  /** Bundled design folder, e.g. "essential/sleek-compact" (see src/overlay/ovl.ts). */
+  design: string;
+  /** dark | clear (shown as Smoke) | float | white */
+  theme: string;
 }
 
 export interface Settings {
@@ -559,6 +562,7 @@ export interface Settings {
   stutterFactor: number;
   overlay: OverlaySettings;
   exportRedactDefault: boolean;
+  autoCaptureGames: boolean;
 }
 
 export interface FrameStats {
@@ -610,6 +614,7 @@ export interface GamingLive {
   recentFrametimes: number[];
   context: ContextPoint | null;
   lastSavedSession: N;
+  autoStarted: boolean;
 }
 
 export interface Agg {
@@ -652,6 +657,7 @@ export interface Candidate {
   gpuPct: N;
   gpuDedicatedBytes: N;
   foreground: boolean;
+  isGame: boolean;
 }
 
 export interface ChannelStatus {

@@ -21,10 +21,12 @@ pub struct Candidate {
     pub gpu_pct: Option<f32>,
     pub gpu_dedicated_bytes: Option<u64>,
     pub foreground: bool,
+    /// Windows lists it as a game, or it runs from a game store's library.
+    pub is_game: bool,
 }
 
-/// Processes that are using the GPU right now, plus the foreground app. A
-/// suggestion list for choosing what to capture; it does not claim a process is a game.
+/// Running games first, then processes using the GPU
+/// and the foreground app: a suggestion list for choosing what to capture.
 #[tauri::command]
 pub fn get_game_candidates(state: State<'_, AppState>) -> Vec<Candidate> {
     const IGNORE: [&str; 8] = [
@@ -40,13 +42,19 @@ pub fn get_game_candidates(state: State<'_, AppState>) -> Vec<Candidate> {
     let fg = veyl_windows::elevation::foreground_pid();
     let own = std::process::id();
     let table = state.live.read().processes.clone();
+    let games = veyl_windows::games::Games::load();
+    let game = |r: &veyl_core::ProcessRow| {
+        r.path
+            .as_deref()
+            .is_some_and(|p| games.is_game(p, table.app_pids.binary_search(&r.pid).is_ok()))
+    };
     let mut list: Vec<Candidate> = table
         .rows
         .iter()
         .filter(|r| {
             r.pid != own && r.pid > 4 && !IGNORE.contains(&r.name.to_ascii_lowercase().as_str())
         })
-        .filter(|r| Some(r.pid) == fg || r.gpu_pct.unwrap_or(0.0) >= 1.0)
+        .filter(|r| Some(r.pid) == fg || r.gpu_pct.unwrap_or(0.0) >= 1.0 || game(r))
         .map(|r| Candidate {
             pid: r.pid,
             name: r.name.clone(),
@@ -54,14 +62,18 @@ pub fn get_game_candidates(state: State<'_, AppState>) -> Vec<Candidate> {
             gpu_pct: r.gpu_pct,
             gpu_dedicated_bytes: r.gpu_dedicated_bytes,
             foreground: Some(r.pid) == fg,
+            is_game: game(r),
         })
         .collect();
     list.sort_by(|a, b| {
-        b.foreground.cmp(&a.foreground).then(
-            b.gpu_pct
-                .unwrap_or(0.0)
-                .total_cmp(&a.gpu_pct.unwrap_or(0.0)),
-        )
+        b.is_game
+            .cmp(&a.is_game)
+            .then(b.foreground.cmp(&a.foreground))
+            .then(
+                b.gpu_pct
+                    .unwrap_or(0.0)
+                    .total_cmp(&a.gpu_pct.unwrap_or(0.0)),
+            )
     });
     list.truncate(25);
     list
@@ -76,6 +88,35 @@ pub fn start_capture(state: State<'_, AppState>, pid: u32) -> CmdResult<()> {
         .gaming_tx
         .try_send(GamingCommand::Start { pid })
         .map_err(|_| "The capture service is busy; try again".to_string())
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresentMonRelease {
+    pub version: &'static str,
+    pub size_bytes: u64,
+    pub url: &'static str,
+}
+
+/// What `install_presentmon` would download, for the button text.
+#[tauri::command]
+pub fn get_presentmon_release() -> PresentMonRelease {
+    use veyl_windows::presentmon::{PINNED_SIZE, PINNED_URL, PINNED_VERSION};
+    PresentMonRelease {
+        version: PINNED_VERSION,
+        size_bytes: PINNED_SIZE,
+        url: PINNED_URL,
+    }
+}
+
+/// Downloads the pinned PresentMon release into the tools folder (explicit user action).
+#[tauri::command(async)]
+pub fn install_presentmon(state: State<'_, AppState>) -> CmdResult<String> {
+    let path = veyl_windows::presentmon::install_pinned(&state.paths.tools)?;
+    tracing::info!("installed PresentMon to {}", path.display());
+    // A full queue only delays the status update until the next capture command.
+    let _ = state.gaming_tx.try_send(GamingCommand::Refresh);
+    Ok(path.display().to_string())
 }
 
 #[tauri::command]
@@ -131,6 +172,72 @@ pub fn set_overlay_enabled(
         .save(&state.paths.settings)
         .map_err(|e| e.to_string())?;
     crate::overlay::apply(&app, &state, &snapshot.overlay)?;
+    let _ = app.emit("settings-changed", &snapshot); // windows may not be listening
+    Ok(())
+}
+
+/// Picks a bundled overlay design and theme (Gaming page).
+#[tauri::command]
+pub fn set_overlay_style(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    design: String,
+    theme: String,
+) -> CmdResult<()> {
+    use crate::settings::{OVERLAY_DESIGNS, OVERLAY_THEMES};
+    if !OVERLAY_DESIGNS.contains(&design.as_str()) || !OVERLAY_THEMES.contains(&theme.as_str()) {
+        return Err("Unknown overlay design or theme".into());
+    }
+    let snapshot = {
+        let mut s = state.settings.write();
+        s.overlay.design = design;
+        s.overlay.theme = theme;
+        s.clone()
+    };
+    snapshot
+        .save(&state.paths.settings)
+        .map_err(|e| e.to_string())?;
+    let _ = app.emit("settings-changed", &snapshot); // the overlay window reloads its layout
+    Ok(())
+}
+
+/// Where the overlay sits on the game's window (Gaming page).
+#[tauri::command(async)]
+pub fn set_overlay_position(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    position: String,
+) -> CmdResult<()> {
+    if !crate::settings::OVERLAY_POSITIONS.contains(&position.as_str()) {
+        return Err("Unknown overlay position".into());
+    }
+    let snapshot = {
+        let mut s = state.settings.write();
+        s.overlay.position = position;
+        s.clone()
+    };
+    snapshot
+        .save(&state.paths.settings)
+        .map_err(|e| e.to_string())?;
+    crate::overlay::apply(&app, &state, &snapshot.overlay)?; // moves the window now
+    let _ = app.emit("settings-changed", &snapshot); // the overlay re-anchors its content
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_auto_capture_games(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    enabled: bool,
+) -> CmdResult<()> {
+    let snapshot = {
+        let mut s = state.settings.write();
+        s.auto_capture_games = enabled;
+        s.clone()
+    };
+    snapshot
+        .save(&state.paths.settings)
+        .map_err(|e| e.to_string())?;
     let _ = app.emit("settings-changed", &snapshot); // windows may not be listening
     Ok(())
 }

@@ -7,6 +7,7 @@ import { useQuery } from "../lib/hooks";
 import { api, errorText } from "../lib/ipc";
 import { useLive } from "../lib/live";
 import { knownUpdate, type OverlaySettings, type Settings as S } from "../lib/types";
+import { OVERLAY_POSITIONS } from "../overlay/ovl";
 
 function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
   return (
@@ -23,18 +24,6 @@ function Row({ label, hint, children }: { label: string; hint?: ReactNode; child
 function Num({ value, onChange, label, min, max, step = 1 }: { value: number; onChange: (v: number) => void; label: string; min: number; max: number; step?: number }) {
   return <TextInput type="number" aria-label={label} className="w-24 text-right tabular" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />;
 }
-
-const OVERLAY_METRICS: { id: string; label: string }[] = [
-  { id: "fps", label: "FPS" },
-  { id: "frametime", label: "Frame time" },
-  { id: "low1", label: "1% low" },
-  { id: "gpuUtil", label: "GPU usage" },
-  { id: "gpuTemp", label: "GPU temperature" },
-  { id: "cpuUtil", label: "CPU usage" },
-  { id: "cpuTemp", label: "CPU temperature" },
-  { id: "vram", label: "VRAM" },
-  { id: "ram", label: "RAM" },
-];
 
 export default function Settings() {
   const { settings, refreshSettings } = useNav();
@@ -176,29 +165,16 @@ export default function Settings() {
         </Panel>
 
         <Panel title="Game overlay">
-          <Row label="Overlay" hint="A click-through window above other windows. Visible over borderless and windowed games; exclusive-fullscreen games draw over it. It never touches the game process.">
+          <Row label="Overlay" hint="A click-through panel on the game's window, shown only while the game is the active window and never over other applications. Pick its design, theme and position on the Gaming page. Visible over borderless and windowed games; exclusive-fullscreen games draw over it. It never touches the game process.">
             <Switch label="Enable overlay" checked={d.overlay.enabled} onChange={(v) => ov({ enabled: v })} />
           </Row>
-          <Row label="Position and layout">
-            <Select label="Position" value={d.overlay.position} onChange={(v) => ov({ position: v })} options={[{ value: "topLeft", label: "Top left" }, { value: "topRight", label: "Top right" }, { value: "bottomLeft", label: "Bottom left" }, { value: "bottomRight", label: "Bottom right" }]} />
-            <Select label="Layout" value={d.overlay.layout} onChange={(v) => ov({ layout: v })} options={[{ value: "vertical", label: "Vertical" }, { value: "horizontal", label: "Horizontal" }]} />
+          <Row label="Position">
+            <Select label="Position" value={d.overlay.position} onChange={(v) => ov({ position: v })} options={OVERLAY_POSITIONS.map((p) => ({ value: p.id, label: p.label }))} />
           </Row>
           <Row label="Scale / opacity / refresh">
             <Num label="Scale" value={d.overlay.scale} min={0.5} max={3} step={0.1} onChange={(v) => ov({ scale: v })} /> ×
             <Num label="Opacity" value={d.overlay.opacity} min={0.2} max={1} step={0.05} onChange={(v) => ov({ opacity: v })} />
             <Num label="Refresh interval" value={d.overlay.refreshMs} min={250} max={5000} step={250} onChange={(v) => ov({ refreshMs: v })} /> ms
-          </Row>
-          <Row label="Metrics">
-            {OVERLAY_METRICS.map((m) => (
-              <label key={m.id} className="flex items-center gap-1 text-[12.5px] mr-2">
-                <input
-                  type="checkbox"
-                  checked={d.overlay.metrics.includes(m.id)}
-                  onChange={(e) => ov({ metrics: e.target.checked ? [...d.overlay.metrics, m.id] : d.overlay.metrics.filter((x) => x !== m.id) })}
-                />
-                {m.label}
-              </label>
-            ))}
           </Row>
         </Panel>
 
@@ -234,7 +210,7 @@ export default function Settings() {
         </Panel>
 
         <Panel title="Privacy and export">
-          <p className="text-[12.5px] text-muted mb-2">All data stays on this PC. The only network requests are update checks (when enabled above) and symbol downloads (when enabled). No telemetry is collected. Exports are written only to files you choose.</p>
+          <p className="text-[12.5px] text-muted mb-2">All data stays on this PC. The only network requests are update checks (when enabled above), symbol downloads (when enabled) and the PresentMon download when you click Install PresentMon. No telemetry is collected. Exports are written only to files you choose.</p>
           <Row label="Redact personal data by default" hint="Replaces your user name, profile path, computer name, account SIDs and drive serial numbers in exports.">
             <Switch label="Redact by default" checked={d.exportRedactDefault} onChange={(v) => set({ exportRedactDefault: v })} />
           </Row>
