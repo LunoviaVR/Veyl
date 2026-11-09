@@ -27,6 +27,19 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: swatinem/rust-cache@v2
       - run: npm ci
+      # Anonymous GitHub release downloads can time out (504) and fail the bundle step; fetch the
+      # bundler's NSIS toolset with the job token instead.
+      # shortcut: versions are the ones @tauri-apps/cli 2.12.4 uses; update them when the CLI changes NSIS.
+      - name: Fetch NSIS toolset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $t = "$env:LOCALAPPDATA\tauri"
+          gh release download nsis-3.13 -R tauri-apps/binary-releases -p nsis-3.13.zip -D $env:RUNNER_TEMP
+          Expand-Archive "$env:RUNNER_TEMP\nsis-3.13.zip" $t
+          Rename-Item "$t\nsis-3.13" NSIS
+          gh release download nsis_tauri_utils-v0.5.3 -R tauri-apps/nsis-tauri-utils -p nsis_tauri_utils.dll -D "$t\NSIS\Plugins\x86-unicode\additional"
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
