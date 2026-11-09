@@ -2,6 +2,14 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.2 (2026-11-08)
+
+### Added
+
+- **Install Debugging Tools** button on the Blue Screen Analyzer. It runs Microsoft's winget
+  to add only the debugger feature of the Windows SDK, so dumps can be analyzed without a
+  manual SDK install.
+
 ## 1.0.1 (2026-11-08)
 
 ### Fixed
