@@ -2,6 +2,14 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.5 (2026-11-09)
+
+### Added
+
+- The signed PawnIO 2.2.0 setup now comes with Veyl. **Install PawnIO** on the Hardware page
+  installs the driver for CPU temperatures and motherboard fans, voltages and temperatures, and
+  the sensors start without restarting Veyl. Nothing is installed until you click.
+
 ## 1.0.4 (2026-11-09)
 
 ### Fixed
