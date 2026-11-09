@@ -181,13 +181,12 @@ you delete it.
 
 ### Optional add-ons
 
-None of these are bundled. Without one, its page explains what is missing and everything else
-keeps working.
+Without one, its page explains what is missing and everything else keeps working. Intel
+PresentMon, which measures FPS, is not an add-on: it is installed with Veyl.
 
 | Add-on | What it adds | How to get it |
 |---|---|---|
 | [PawnIO](https://pawnio.eu) (open source, Microsoft-signed) | CPU temperatures (Intel); motherboard fans, voltages and temperatures (Nuvoton) | Install PawnIO. Veyl ships only PawnIO's official signed modules, never the driver. |
-| [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Click **Install PresentMon** on the Gaming page: Veyl downloads Intel's official release from GitHub, keeps it only if it matches the published checksum, and saves it in its `tools` folder. Or place the console app there yourself. |
 | Debugging Tools for Windows | Blue screen dump analysis (`!analyze -v`) | Click **Install Debugging Tools** on the Blue Screen Analyzer page: Veyl runs Microsoft's winget to add only the debugger feature of the Windows SDK. Or install "Debugging Tools for Windows" from the Windows SDK installer yourself. Veyl finds it automatically. |
 | Microsoft symbol server | Named functions and modules in dump analysis | Off by default. Turn it on in **Settings → Integrations**. Only symbol files are downloaded; dumps never leave your PC. |
 
@@ -196,8 +195,7 @@ keeps working.
 - **No telemetry, no account, no cloud.** History, settings and logs stay in
   `%LOCALAPPDATA%\app.veyl.monitor`.
 - **Network requests:** only the update check (can be turned off), the optional symbol
-  downloads, the PresentMon download when you click **Install PresentMon**, and the
-  winget install from Microsoft when you click **Install Debugging Tools**.
+  downloads, and the winget install from Microsoft when you click **Install Debugging Tools**.
 - **Exports** are written only to files you choose, with optional removal of your user name,
   profile path, computer name, account IDs (SIDs) and drive serial numbers.
 - **Packet captures** stay in memory, are never written to disk, and are cleared when you start a
@@ -270,7 +268,7 @@ No. There is no telemetry and no account, and all data stays on your PC.
 | GPU power "not reported" | Your driver does not report power to Windows (common on AMD). |
 | Overlay not showing | It appears only while a detected game is the active window, and only over borderless or windowed games. Check that **Overlay** is on at the top of the Gaming page. |
 | Capture didn't start for a game | Press Win+G in the game and tick "Remember this is a game", or click **Capture** next to it on the Gaming page. |
-| Gaming: "PresentMon not found" | Click **Install PresentMon** on the Gaming page, or put `PresentMon-x.y.z-x64.exe` in the tools folder inside Veyl's Program Files folder. |
+| Gaming: "PresentMon is missing" | Reinstall Veyl: the installer puts PresentMon back in the `tools` folder inside Veyl's Program Files folder. |
 | Network: "needs administrator rights" | Start Veyl from the Start menu (it runs as administrator), or add your account to *Performance Log Users*. |
 | No dump files listed | Windows keeps minidumps only when *Startup and Recovery → Write debugging information* is on, and deletes old ones itself. |
 | History empty for a period | Veyl wasn't running then; gaps are shaded, never filled in. |

@@ -8,6 +8,14 @@ release zip SHA-256 43608cb89bc84247fef1368a139013f7d043e17db6d6c8dfc9b46bf0905a
 They are licensed under the GNU LGPL 2.1 (see `crates/windows-platform/pawnio/COPYING`);
 source code: https://github.com/namazso/PawnIO.Modules.
 
+## Intel PresentMon (bundled)
+
+`src-tauri/resources/PresentMon-2.6.0-x64.exe` is the unmodified, Intel-signed console application
+from PresentMon release 2.6.0 (https://github.com/GameTechDev/PresentMon, SHA-256
+b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af). Copyright (C) 2017-2024
+Intel Corporation, MIT License (see `src-tauri/resources/PresentMon-LICENSE.txt`, installed
+next to it in Veyl's `tools` folder).
+
 ## PawnIO driver and PawnIOLib (not bundled)
 
 The PawnIO driver (GPL-2.0 with an exception for programs using its device interface)

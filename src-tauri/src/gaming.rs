@@ -14,18 +14,14 @@ use veyl_core::frames::{FrameMetricsProvider, FrameRecord};
 use veyl_core::{Availability, Status};
 use veyl_storage::NewSession;
 use veyl_windows::games::Games;
-use veyl_windows::presentmon::{find_presentmon, PresentMonCli};
+use veyl_windows::presentmon::{find_presentmon, PresentMonCli, BUNDLED_EXE};
 
 use crate::state::{now_ms, AppState};
 use crate::writer::WriteMsg;
 
 pub enum GamingCommand {
-    Start {
-        pid: u32,
-    },
+    Start { pid: u32 },
     Stop,
-    /// Re-check whether PresentMon is available (after it was installed).
-    Refresh,
 }
 
 /// Window used for live statistics.
@@ -210,12 +206,20 @@ fn provider_status(state: &AppState) -> (Option<std::path::PathBuf>, Status) {
     let configured = state.settings.read().presentmon_path.clone();
     match find_presentmon(configured.as_deref(), &state.paths.tools) {
         Some(p) => (Some(p), Status::available()),
-        None if configured.is_some() => (None, Status::new(Availability::ProviderUnavailable, "The configured PresentMon path is not a PresentMon*.exe file")),
+        None if configured.is_some() => (None, Status::new(Availability::ProviderUnavailable, "The PresentMon path in Settings cannot be used: it must be a PresentMon*.exe inside Program Files. Clear it to use the copy installed with Veyl.")),
+        // Present but refused: the elevated app only runs programs from admin-only folders.
+        None if state.paths.tools.join(BUNDLED_EXE).is_file() => (
+            None,
+            Status::new(
+                Availability::ProviderUnavailable,
+                format!("Veyl runs as administrator, so it only starts programs from folders that only administrators can change, and {} is not one. Reinstall Veyl into Program Files (the default).", state.paths.tools.display()),
+            ),
+        ),
         None => (
             None,
             Status::new(
                 Availability::ProviderUnavailable,
-                format!("PresentMon not found. Install Intel PresentMon (free, MIT) and select PresentMon*.exe in Settings, or place it in {}", state.paths.tools.display()),
+                format!("PresentMon is missing from {}. Reinstall Veyl to restore it, or select a PresentMon*.exe in Settings.", state.paths.tools.display()),
             ),
         ),
     }
@@ -371,8 +375,6 @@ pub fn run(app: AppHandle, rx: Receiver<GamingCommand>) {
                     }
                 }
             }
-            Some(GamingCommand::Refresh) if session.is_none() => status = provider_status(&state).1,
-            Some(GamingCommand::Refresh) => {}
             Some(GamingCommand::Stop) => {
                 if let Some(mut p) = provider.take() {
                     p.stop();

@@ -227,16 +227,6 @@ export default function Gaming() {
   const [compare, setCompare] = useState<number[]>([]);
   const [showCompare, setShowCompare] = useState(false);
   const [sort, setSort] = useState<SortState | null>({ id: "date", desc: true });
-  const release = useQuery(() => api.presentmonRelease(), []);
-  // On success the provider status turns available and this panel disappears.
-  const [install, setInstall] = useState<{ kind: "idle" } | { kind: "installing" } | { kind: "failed"; error: string }>({ kind: "idle" });
-  const runInstall = () => {
-    setInstall({ kind: "installing" });
-    api.installPresentmon().then(
-      () => setInstall({ kind: "idle" }),
-      (e) => setInstall({ kind: "failed", error: errorText(e) }),
-    );
-  };
 
   useEffect(() => {
     if (params.pid && !live?.capturing) api.startCapture(Number(params.pid)).catch((e) => setError(errorText(e)));
@@ -345,30 +335,15 @@ export default function Gaming() {
               <p className="text-muted">
                 Veyl measures FPS with Intel PresentMon, which reads the presentation events Windows already records (DirectX 9–12, Vulkan and OpenGL via the graphics kernel). Nothing is injected into games, so anti-cheat systems are not affected. PresentMon is free and MIT-licensed.
               </p>
-              {release.data && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button variant="primary" disabled={install.kind === "installing"} onClick={runInstall}>
-                    <Download className="size-3.5" /> {install.kind === "installing" ? "Downloading…" : `Install PresentMon ${release.data.version}`}
-                  </Button>
-                  <span className="text-muted">
-                    Downloads the official Intel release ({f.bytes(release.data.sizeBytes)}) from GitHub, keeps it only if it matches the published checksum, and saves it in Veyl's tools folder.
-                  </span>
-                </div>
-              )}
-              {install.kind === "failed" && <p className="text-bad">{install.error}</p>}
-              <details className="text-muted">
-                <summary className="cursor-pointer">Set it up yourself instead</summary>
-                <ol className="list-decimal pl-5 mt-1">
-                  <li>Download the PresentMon console application (PresentMon-x.y.z-x64.exe) from github.com/GameTechDev/PresentMon/releases.</li>
-                  <li>Place it in the tools folder (Windows asks for administrator permission, because it is inside Program Files), or select a copy inside Program Files in Settings → Integrations.</li>
-                </ol>
-                <div className="flex gap-2 mt-2">
-                  <Button onClick={() => api.openAppFolder("tools")}>
-                    <FolderOpen className="size-3.5" /> Open tools folder
-                  </Button>
-                  <Button onClick={() => go("settings", { section: "integrations" })}>Settings</Button>
-                </div>
-              </details>
+              <p className="text-muted">
+                PresentMon is installed with Veyl in its tools folder. Reinstalling Veyl puts it back, or you can select another PresentMon-x.y.z-x64.exe inside Program Files in Settings.
+              </p>
+              <div className="flex gap-2">
+                <Button onClick={() => api.openAppFolder("tools")}>
+                  <FolderOpen className="size-3.5" /> Open tools folder
+                </Button>
+                <Button onClick={() => go("settings", { section: "integrations" })}>Settings</Button>
+              </div>
               <p className="text-muted">Frame capture uses Windows event tracing, which needs administrator rights or membership in the Performance Log Users group.</p>
             </div>
           </Panel>

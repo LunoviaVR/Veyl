@@ -18,7 +18,6 @@ pub mod cpu;
 pub mod debugger;
 pub mod disk;
 pub mod display;
-pub mod download;
 pub mod elevation;
 pub mod energy;
 pub mod eventlog;

@@ -32,6 +32,10 @@
     "targets": [
       "nsis"
     ],
+    "resources": {
+      "resources/PresentMon-2.6.0-x64.exe": "tools/PresentMon-2.6.0-x64.exe",
+      "resources/PresentMon-LICENSE.txt": "tools/PresentMon-LICENSE.txt"
+    },
     "category": "Utility",
     "shortDescription": "Windows PC health, performance and crash diagnostics",
     "longDescription": "Real-time system monitoring, hardware sensors, frame-time analysis, crash and blue-screen investigation, stability history and alerts for Windows.",

@@ -303,8 +303,6 @@ pub fn run() {
             commands::gaming::get_game_candidates,
             commands::gaming::start_capture,
             commands::gaming::stop_capture,
-            commands::gaming::install_presentmon,
-            commands::gaming::get_presentmon_release,
             commands::gaming::get_game_sessions,
             commands::gaming::get_game_session,
             commands::gaming::delete_game_session,

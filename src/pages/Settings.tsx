@@ -146,7 +146,7 @@ export default function Settings() {
         </Panel>
 
         <Panel title="Integrations">
-          <Row label="PresentMon executable" hint="Intel PresentMon console application used for frame capture. Leave empty to use the tools folder. Must be inside Program Files: Veyl runs it as administrator, so it only runs programs other users and apps cannot replace.">
+          <Row label="PresentMon executable" hint="Intel PresentMon console application used for frame capture. Leave empty to use the copy installed with Veyl. Must be inside Program Files: Veyl runs it as administrator, so it only runs programs other users and apps cannot replace.">
             <TextInput className="w-[420px] font-mono text-[11.5px]" placeholder="C:\Tools\PresentMon-2.x-x64.exe" value={d.presentmonPath ?? ""} onChange={(e) => set({ presentmonPath: e.target.value || null })} aria-label="PresentMon path" />
             <Button onClick={() => api.openAppFolder("tools")}>
               <FolderOpen className="size-3.5" /> Tools folder
@@ -210,7 +210,7 @@ export default function Settings() {
         </Panel>
 
         <Panel title="Privacy and export">
-          <p className="text-[12.5px] text-muted mb-2">All data stays on this PC. The only network requests are update checks (when enabled above), symbol downloads (when enabled) and the PresentMon download when you click Install PresentMon. No telemetry is collected. Exports are written only to files you choose.</p>
+          <p className="text-[12.5px] text-muted mb-2">All data stays on this PC. The only network requests are update checks (when enabled above), symbol downloads (when enabled) and the Debugging Tools install when you click Install Debugging Tools. No telemetry is collected. Exports are written only to files you choose.</p>
           <Row label="Redact personal data by default" hint="Replaces your user name, profile path, computer name, account SIDs and drive serial numbers in exports.">
             <Switch label="Redact by default" checked={d.exportRedactDefault} onChange={(v) => set({ exportRedactDefault: v })} />
           </Row>

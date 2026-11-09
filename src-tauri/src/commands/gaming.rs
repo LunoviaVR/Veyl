@@ -90,35 +90,6 @@ pub fn start_capture(state: State<'_, AppState>, pid: u32) -> CmdResult<()> {
         .map_err(|_| "The capture service is busy; try again".to_string())
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PresentMonRelease {
-    pub version: &'static str,
-    pub size_bytes: u64,
-    pub url: &'static str,
-}
-
-/// What `install_presentmon` would download, for the button text.
-#[tauri::command]
-pub fn get_presentmon_release() -> PresentMonRelease {
-    use veyl_windows::presentmon::{PINNED_SIZE, PINNED_URL, PINNED_VERSION};
-    PresentMonRelease {
-        version: PINNED_VERSION,
-        size_bytes: PINNED_SIZE,
-        url: PINNED_URL,
-    }
-}
-
-/// Downloads the pinned PresentMon release into the tools folder (explicit user action).
-#[tauri::command(async)]
-pub fn install_presentmon(state: State<'_, AppState>) -> CmdResult<String> {
-    let path = veyl_windows::presentmon::install_pinned(&state.paths.tools)?;
-    tracing::info!("installed PresentMon to {}", path.display());
-    // A full queue only delays the status update until the next capture command.
-    let _ = state.gaming_tx.try_send(GamingCommand::Refresh);
-    Ok(path.display().to_string())
-}
-
 #[tauri::command]
 pub fn stop_capture(state: State<'_, AppState>) -> CmdResult<()> {
     state

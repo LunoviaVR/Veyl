@@ -43,7 +43,7 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 
 | Item | State | Notes |
 |---|---|---|
-| PresentMon CLI provider (v1 and v2 CSV columns) | Done (not exercised end-to-end: PresentMon is not installed on the test machine) | Parser tested on both formats |
+| PresentMon CLI provider (v1 and v2 CSV columns) | Done (bundled 2.6.0, exercised end-to-end) | Parser tested on both formats |
 | FPS, 1%/0.1% lows, P50/P95/P99, stutter, pacing, live stats | Done | Definitions in docs/METRICS.md |
 | Candidate detection (GPU users + foreground), manual selection | Done | |
 | Sessions: storage, context (CPU/GPU/temps/VRAM/RAM), comparison, CSV export, delete | Done | |
