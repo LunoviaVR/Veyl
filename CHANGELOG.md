@@ -2,6 +2,16 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.4 (2026-11-09)
+
+### Fixed
+
+- Updating or uninstalling no longer fails with "Error opening file for writing" when a
+  PresentMon capture was still running. The installer stops PresentMon first.
+- **Check now** explains that GitHub can take a few minutes to serve a release that was just
+  published, instead of saying no release information was found.
+- A failed update install is now written to the log.
+
 ## 1.0.3 (2026-11-09)
 
 ### Changed
