@@ -2,6 +2,18 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.3 (2026-11-09)
+
+### Changed
+
+- Intel PresentMon 2.6.0 now comes with Veyl, so FPS capture works right after installing.
+  The **Install PresentMon** button and its download are gone.
+
+### Fixed
+
+- When Veyl is installed outside Program Files, the Gaming page now explains why it will not run
+  PresentMon instead of saying PresentMon is missing.
+
 ## 1.0.2 (2026-11-08)
 
 ### Added
