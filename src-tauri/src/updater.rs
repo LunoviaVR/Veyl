@@ -108,9 +108,10 @@ pub async fn check(app: &AppHandle) -> UpdateStatus {
     }
     let result = match app.updater() {
         Ok(u) => u.check().await.map_err(|e| match e {
-            // Also what a missing latest.json (no release published yet) looks like.
+            // Any non-success status: no release yet, offline, or GitHub still serving the old
+            // "latest" release (it errors for a few minutes after each publish).
             tauri_plugin_updater::Error::ReleaseNotFound => {
-                "No release information was found on GitHub, or GitHub could not be reached".into()
+                "GitHub did not return the update information. Right after a new release is published this can take a few minutes, so try again shortly; otherwise check the internet connection.".into()
             }
             e => e.to_string(),
         }),
@@ -189,6 +190,7 @@ pub async fn install(app: &AppHandle) -> Result<(), String> {
     }
     .await;
     if let Err(error) = result {
+        tracing::warn!("update install failed: {error}");
         set(app, |s| {
             s.state = UpdateState::Failed {
                 error: error.clone(),
