@@ -25,7 +25,7 @@ pub const SESSION_NAME: &str = "Veyl";
 /// Frames buffered between polls; older frames are dropped (and counted) beyond this.
 const BUFFER_CAP: usize = 200_000;
 /// windows.h CREATE_NO_WINDOW: do not flash a console window.
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+pub(crate) const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// Column indices resolved from the CSV header.
 #[derive(Debug, Clone, PartialEq, Eq)]

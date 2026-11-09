@@ -1,4 +1,4 @@
-import { FileSearch, Lock, ShieldAlert } from "lucide-react";
+import { Download, FileSearch, Lock, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { useNav } from "../App";
 import { ContextCharts } from "../components/EventViews";
@@ -119,7 +119,19 @@ export default function Bsod() {
   const q = useQuery(() => api.bsodOverview(), [], { events: ["stability-changed"] });
   const [sel, setSel] = useState(0);
   const [run, setRun] = useState<Analysis>({ kind: "idle" });
+  const [install, setInstall] = useState<{ kind: "idle" } | { kind: "installing" } | { kind: "failed"; error: string }>({ kind: "idle" });
   const o = q.data;
+
+  const runInstall = () => {
+    setInstall({ kind: "installing" });
+    api.installDebugger().then(
+      () => {
+        setInstall({ kind: "idle" });
+        q.refresh(); // shows the debugger path and enables Analyze
+      },
+      (e) => setInstall({ kind: "failed", error: errorText(e) }),
+    );
+  };
   const inc = o?.incidents[sel];
 
   const analyze = async (path: string) => {
@@ -156,12 +168,24 @@ export default function Bsod() {
                 {o.debuggerPath ? (
                   <>Debugger: <span className="font-mono text-[11px]">{o.debuggerPath}</span></>
                 ) : (
-                  <span className="flex items-start gap-1.5">
-                    <ShieldAlert className="size-3.5 mt-px text-warn shrink-0" />
-                    <span>
-                      Dump analysis needs Debugging Tools for Windows (cdb.exe), which is not installed. Install “Debugging Tools for Windows” from the Windows SDK installer, or select cdb.exe in <button className="underline" onClick={() => go("settings", { section: "integrations" })}>Settings</button>. Event-log information does not need it.
+                  <>
+                    <span className="flex items-start gap-1.5">
+                      <ShieldAlert className="size-3.5 mt-px text-warn shrink-0" />
+                      <span>
+                        Dump analysis needs Debugging Tools for Windows (cdb.exe), which is not installed. Event-log information does not need it.
+                      </span>
                     </span>
-                  </span>
+                    <Button variant="primary" className="mt-2" disabled={install.kind === "installing"} onClick={runInstall}>
+                      <Download className="size-3.5" /> {install.kind === "installing" ? "Installing…" : "Install Debugging Tools"}
+                    </Button>
+                    <p className="mt-1.5 text-[11.5px] text-faint">
+                      {install.kind === "installing"
+                        ? "Downloading from Microsoft. This takes a few minutes."
+                        : "Installs only the debugger feature of Microsoft's Windows SDK, with winget, from Microsoft's package source."}{" "}
+                      Or install it from the Windows SDK installer, or select cdb.exe in <button className="underline" onClick={() => go("settings", { section: "integrations" })}>Settings</button>.
+                    </p>
+                    {install.kind === "failed" && <p className="mt-1 text-[12px] text-bad">{install.error}</p>}
+                  </>
                 )}
                 {!o.elevated && <p className="mt-1 text-[11.5px] text-faint">Reading dumps in the Windows folder usually needs administrator rights (Settings → Restart as administrator).</p>}
               </div>

@@ -202,6 +202,13 @@ pub async fn analyze_dump(app: AppHandle, path: String) -> CmdResult<DumpAnalysi
     blocking(move || debugger::analyze(&cdb, &PathBuf::from(path), &cache, symbols)).await?
 }
 
+/// Installs Debugging Tools for Windows with winget (explicit user action; no input).
+#[tauri::command]
+pub async fn install_debugger() -> CmdResult<()> {
+    tracing::info!("installing Debugging Tools for Windows with winget");
+    blocking(debugger::install_debuggers).await?
+}
+
 #[tauri::command(async)]
 pub fn get_diagnostics(state: State<'_, AppState>) -> CmdResult<Vec<Finding>> {
     let now = now_ms();

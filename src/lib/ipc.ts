@@ -36,6 +36,7 @@ export const api = {
   eventDetail: (channel: string, recordId: number) => call<T.EventDetailView>("get_event_detail", { channel, recordId }),
   bsodOverview: () => call<T.BsodOverview>("get_bsod_overview"),
   analyzeDump: (path: string) => call<T.DumpAnalysis>("analyze_dump", { path }),
+  installDebugger: () => call<void>("install_debugger"),
   diagnostics: () => call<T.Finding[]>("get_diagnostics"),
   timeline: (centerMs: number, halfWindowMs: number) => call<T.TimelineView>("get_timeline", { centerMs, halfWindowMs }),
 

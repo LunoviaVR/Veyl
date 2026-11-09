@@ -1,7 +1,7 @@
 //! Crash dump discovery and optional analysis with Microsoft's console debugger
-//! (cdb.exe from Debugging Tools for Windows). The debugger is never downloaded
-//! or installed by this application; the user installs it (Windows SDK) or
-//! points to it in Settings.
+//! (cdb.exe from Debugging Tools for Windows). The debugger is installed only when
+//! the user clicks Install (winget, from Microsoft), or the user installs it
+//! (Windows SDK) or points to it in Settings.
 //!
 //! The debugger runs with a fixed argument list built here (no shell), a dump
 //! path that has been validated, and a symbol path we control: a local cache
@@ -118,6 +118,97 @@ pub fn find_cdb(configured: Option<&str>) -> Option<PathBuf> {
     candidates
         .into_iter()
         .find(|p| valid_cdb_path(p) && crate::elevation::may_execute(p))
+}
+
+/// The Windows SDK release whose "Debugging Tools for Windows" feature `install_debuggers` adds.
+const SDK_PACKAGE: &str = "Microsoft.WindowsSDK.10.0.28000";
+
+/// winget.exe inside the installed App Installer package. Elevated, this is the only copy
+/// Veyl may run: the `winget` alias on PATH lives in a folder the user can change.
+pub fn winget_path() -> Option<PathBuf> {
+    use windows::core::{PCWSTR, PWSTR};
+    use windows::Win32::Foundation::ERROR_SUCCESS;
+    use windows::Win32::Storage::Packaging::Appx::{
+        GetPackagePathByFullName, GetPackagesByPackageFamily,
+    };
+
+    let family = crate::handle::wide("Microsoft.DesktopAppInstaller_8wekyb3d8bbwe");
+    let (mut count, mut len) = (0u32, 0u32);
+    // SAFETY: size query; no buffers are passed. It reports "buffer too small" by design.
+    let _ = unsafe {
+        GetPackagesByPackageFamily(PCWSTR(family.as_ptr()), &mut count, None, &mut len, None)
+    };
+    if count == 0 {
+        return None;
+    }
+    let mut names = vec![PWSTR::null(); count as usize];
+    let mut buf = vec![0u16; len as usize];
+    // SAFETY: both buffers have the sizes the query above returned.
+    let rc = unsafe {
+        GetPackagesByPackageFamily(
+            PCWSTR(family.as_ptr()),
+            &mut count,
+            Some(names.as_mut_ptr()),
+            &mut len,
+            Some(PWSTR(buf.as_mut_ptr())),
+        )
+    };
+    if rc != ERROR_SUCCESS {
+        return None;
+    }
+    names.iter().take(count as usize).find_map(|name| {
+        let mut n = 0u32;
+        // SAFETY: size query for a full name the system just returned (it points into `buf`).
+        let _ = unsafe { GetPackagePathByFullName(PCWSTR(name.0), &mut n, None) };
+        let mut path = vec![0u16; n as usize];
+        // SAFETY: buffer of the queried length.
+        let rc = unsafe {
+            GetPackagePathByFullName(PCWSTR(name.0), &mut n, Some(PWSTR(path.as_mut_ptr())))
+        };
+        let dir = String::from_utf16_lossy(&path[..(n as usize).saturating_sub(1)]);
+        let exe = PathBuf::from(dir).join("winget.exe");
+        (rc == ERROR_SUCCESS && exe.is_file()).then_some(exe)
+    })
+}
+
+/// Installs Debugging Tools for Windows (only that feature of the Windows SDK) with winget
+/// from Microsoft's package source. Runs only when the user clicks Install.
+pub fn install_debuggers() -> Result<(), String> {
+    use std::os::windows::process::CommandExt;
+    let winget = winget_path()
+        .filter(|p| crate::elevation::may_execute(p))
+        .ok_or("winget (App Installer) was not found. Install Debugging Tools for Windows from the Windows SDK installer instead.")?;
+    let out = Command::new(winget)
+        .args([
+            "install",
+            "--id",
+            SDK_PACKAGE,
+            "--exact",
+            "--source",
+            "winget",
+        ])
+        // --force: also runs when this SDK version is installed without its debuggers.
+        .args(["--force", "--disable-interactivity", "--override"])
+        .arg("/features OptionId.WindowsDesktopDebuggers /quiet /norestart")
+        .creation_flags(crate::presentmon::CREATE_NO_WINDOW)
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .output()
+        .map_err(|e| format!("Could not start winget: {e}"))?;
+    if out.status.success() {
+        return Ok(());
+    }
+    // Progress lines end in \r; the last real line is winget's reason.
+    let text = String::from_utf8_lossy(&out.stdout);
+    let reason = text
+        .split(['\r', '\n'])
+        .map(str::trim)
+        .rfind(|l| l.chars().any(char::is_alphabetic))
+        .unwrap_or("no output");
+    Err(format!(
+        "winget could not install Debugging Tools for Windows ({reason}, code {:#010X}).",
+        out.status.code().unwrap_or(-1) as u32
+    ))
 }
 
 /// A configured debugger must be an absolute path to an existing file named cdb.exe.
@@ -453,6 +544,23 @@ FAILURE_BUCKET_ID:  0x13a_17_amdkmdag!unknown_function
         );
         assert!(!valid_dump_path(Path::new(r"C:\Windows\win.ini")));
         assert!(find_cdb(Some(r"C:\nope\cdb.exe")).is_none());
+    }
+
+    #[test]
+    fn winget_is_the_packaged_copy() {
+        // App Installer can be missing (Windows Server, some CI images); when present, never the PATH alias.
+        if let Some(p) = winget_path() {
+            let s = p.to_string_lossy();
+            assert!(
+                s.contains(r"\WindowsApps\Microsoft.DesktopAppInstaller_")
+                    && s.ends_with(r"\winget.exe"),
+                "{s}"
+            );
+            assert!(
+                crate::elevation::in_admin_only_folder(&p),
+                "an elevated Veyl may run it"
+            );
+        }
     }
 
     #[test]

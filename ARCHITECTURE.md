@@ -137,4 +137,6 @@ the overlay) and form drafts (dirty tracking per page).
   dump listed from the Windows dump folders.
 - External tools run with fixed argument lists (`std::process::Command`, no shell).
   `cdb.exe` gets a controlled symbol path; inherited `_NT_SYMBOL_PATH` is removed.
+  `winget.exe` (Install Debugging Tools) runs only from the App Installer package folder,
+  never through the user-writable `winget` alias on PATH.
 - CSP: `default-src 'self'`; IPC only.

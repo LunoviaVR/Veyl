@@ -296,6 +296,7 @@ pub fn run() {
             commands::stability::get_event_detail,
             commands::stability::get_bsod_overview,
             commands::stability::analyze_dump,
+            commands::stability::install_debugger,
             commands::stability::get_diagnostics,
             commands::stability::get_timeline,
             commands::gaming::get_gaming_status,

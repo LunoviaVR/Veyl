@@ -81,10 +81,11 @@ fn main() {
     }
     let dumps = debugger::list_dumps();
     println!(
-        "Dumps: {} files, inaccessible {:?}; cdb {:?}",
+        "Dumps: {} files, inaccessible {:?}; cdb {:?}; winget {:?}",
         dumps.files.len(),
         dumps.inaccessible,
-        debugger::find_cdb(None)
+        debugger::find_cdb(None),
+        debugger::winget_path()
     );
     println!("Elevated: {}", elevation::is_elevated());
 }

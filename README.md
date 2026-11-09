@@ -33,7 +33,7 @@ those views side by side and links them:
 - **Nothing installed behind your back.** Veyl installs no drivers, changes no Windows
   settings, never clears event logs and never deletes crash dumps.
 - **Private by design.** All history stays in a local database. The only network requests are
-  the optional update check and optional debug-symbol downloads.
+  the optional update check, optional debug-symbol downloads and add-ons you install with a click.
 - **Light.** About 0.1 % of total CPU while monitoring ([measurements](PERFORMANCE.md)).
 
 ## Features
@@ -188,7 +188,7 @@ keeps working.
 |---|---|---|
 | [PawnIO](https://pawnio.eu) (open source, Microsoft-signed) | CPU temperatures (Intel); motherboard fans, voltages and temperatures (Nuvoton) | Install PawnIO. Veyl ships only PawnIO's official signed modules, never the driver. |
 | [Intel PresentMon](https://github.com/GameTechDev/PresentMon) (MIT) | FPS and frame-time capture | Click **Install PresentMon** on the Gaming page: Veyl downloads Intel's official release from GitHub, keeps it only if it matches the published checksum, and saves it in its `tools` folder. Or place the console app there yourself. |
-| Debugging Tools for Windows | Blue screen dump analysis (`!analyze -v`) | Install "Debugging Tools for Windows" from the Windows SDK installer. Veyl finds it automatically. |
+| Debugging Tools for Windows | Blue screen dump analysis (`!analyze -v`) | Click **Install Debugging Tools** on the Blue Screen Analyzer page: Veyl runs Microsoft's winget to add only the debugger feature of the Windows SDK. Or install "Debugging Tools for Windows" from the Windows SDK installer yourself. Veyl finds it automatically. |
 | Microsoft symbol server | Named functions and modules in dump analysis | Off by default. Turn it on in **Settings → Integrations**. Only symbol files are downloaded; dumps never leave your PC. |
 
 ## Privacy and security
@@ -196,7 +196,8 @@ keeps working.
 - **No telemetry, no account, no cloud.** History, settings and logs stay in
   `%LOCALAPPDATA%\app.veyl.monitor`.
 - **Network requests:** only the update check (can be turned off), the optional symbol
-  downloads, and the PresentMon download when you click **Install PresentMon**.
+  downloads, the PresentMon download when you click **Install PresentMon**, and the
+  winget install from Microsoft when you click **Install Debugging Tools**.
 - **Exports** are written only to files you choose, with optional removal of your user name,
   profile path, computer name, account IDs (SIDs) and drive serial numbers.
 - **Packet captures** stay in memory, are never written to disk, and are cleared when you start a

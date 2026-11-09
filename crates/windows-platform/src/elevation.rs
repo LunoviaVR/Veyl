@@ -38,7 +38,7 @@ fn admin_only_roots() -> Vec<PathBuf> {
 
 /// True when `p` lies in a folder that only administrators can change.
 // shortcut: a Program Files subfolder whose installer opened it to users still passes; check the ACL if that matters.
-fn in_admin_only_folder(p: &Path) -> bool {
+pub(crate) fn in_admin_only_folder(p: &Path) -> bool {
     let Ok(real) = std::fs::canonicalize(p) else {
         return false;
     };
