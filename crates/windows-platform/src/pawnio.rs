@@ -1,8 +1,9 @@
 //! Hardware sensors through PawnIO (https://pawnio.eu), an open-source (GPL-2.0),
 //! Microsoft-signed, HVCI-compatible driver that only executes signed modules.
 //!
-//! The driver is NOT installed by this application: the user installs PawnIO
-//! (it is also installed by tools such as FanControl and LibreHardwareMonitor).
+//! Veyl's installer puts the official signed PawnIO setup in `tools`; it runs only when
+//! the user clicks Install PawnIO ([`install`]). PawnIO may also come from pawnio.eu or tools
+//! such as FanControl and LibreHardwareMonitor.
 //! The app talks to it through PawnIOLib.dll (LGPL-2.1) from the PawnIO install
 //! folder and loads the official signed modules embedded here (LGPL-2.1, see
 //! `pawnio/COPYING`, release 0.2.11, SHA-256 of the release zip
@@ -58,6 +59,41 @@ pub fn library_path() -> Option<std::path::PathBuf> {
         .find(|p| p.is_file())
 }
 
+/// The PawnIO setup the installer puts in Veyl's `tools` folder (release 2.2.0).
+pub const SETUP_EXE: &str = "PawnIO_setup.exe";
+
+/// Installs the PawnIO driver with the bundled setup (explicit user action).
+pub fn install(tools: &std::path::Path) -> Result<(), String> {
+    use std::os::windows::process::CommandExt;
+    if library_path().is_some() {
+        return Err("PawnIO is already installed.".into());
+    }
+    let setup = tools.join(SETUP_EXE);
+    if !setup.is_file() {
+        return Err(format!(
+            "{SETUP_EXE} is missing from {}. Reinstall Veyl to restore it.",
+            tools.display()
+        ));
+    }
+    if !crate::elevation::may_execute(&setup) {
+        return Err(format!("Veyl runs as administrator, so it only starts programs from folders that only administrators can change, and {} is not one. Reinstall Veyl into Program Files (the default).", tools.display()));
+    }
+    let status = std::process::Command::new(&setup)
+        .args(["-install", "-silent"])
+        .creation_flags(crate::presentmon::CREATE_NO_WINDOW)
+        .status()
+        .map_err(|e| format!("Could not start the PawnIO setup: {e}"))?;
+    match status.code() {
+        // 3010 = ERROR_SUCCESS_REBOOT_REQUIRED.
+        Some(0) => Ok(()),
+        Some(3010) => Err("PawnIO is installed. Restart Windows to finish.".into()),
+        code => Err(format!(
+            "The PawnIO setup failed (error {}).",
+            code.unwrap_or(-1)
+        )),
+    }
+}
+
 /// One PawnIO executor with one module loaded.
 pub struct Executor {
     module: HMODULE,
@@ -74,7 +110,7 @@ impl Executor {
     /// Opens the driver and loads `blob`. Errors carry a user-facing status.
     pub fn open(blob: &[u8]) -> Result<Self, Status> {
         let path = library_path().ok_or_else(|| {
-            Status::new(Availability::ProviderUnavailable, "PawnIO is not installed. Install it from pawnio.eu to add CPU temperatures, motherboard fans and voltages.")
+            Status::new(Availability::ProviderUnavailable, "PawnIO is not installed. Install it on the Hardware page to add CPU temperatures, motherboard fans and voltages.")
         })?;
         let w = wide(&path.to_string_lossy());
         // SAFETY: absolute path to the DLL in PawnIO's (admin-writable only) install folder.

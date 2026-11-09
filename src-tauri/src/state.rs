@@ -65,6 +65,8 @@ pub struct AppState {
     pub game_window: RwLock<Option<veyl_windows::elevation::ScreenRect>>,
     pub reset_sensor_stats: AtomicBool,
     pub refresh_drives: AtomicBool,
+    /// Reopen the PawnIO providers (after PawnIO was installed).
+    pub reload_pawnio: AtomicBool,
     pub shutdown: Arc<AtomicBool>,
     pub threads: Mutex<Vec<(&'static str, std::thread::JoinHandle<()>)>>,
     pub started_ms: i64,

@@ -124,6 +124,15 @@ pub fn run(app: AppHandle, stop: Receiver<()>) {
         let sensors_due = last_sensors.is_none_or(|t| {
             t.elapsed() >= Duration::from_millis(u64::from(settings.sensor_interval_ms))
         });
+        if state.reload_pawnio.swap(false, Ordering::Relaxed) {
+            for p in &mut providers {
+                match p.inner.id() {
+                    "pawnio-cpu" => p.inner = Box::new(pawnio::IntelCpuTempProvider::new()),
+                    "pawnio-superio" => p.inner = Box::new(superio::SuperIoProvider::new()),
+                    _ => {}
+                }
+            }
+        }
         if sensors_due {
             last_sensors = Some(Instant::now());
             for p in &mut providers {

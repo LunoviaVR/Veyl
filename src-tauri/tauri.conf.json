@@ -34,7 +34,9 @@
     ],
     "resources": {
       "resources/PresentMon-2.6.0-x64.exe": "tools/PresentMon-2.6.0-x64.exe",
-      "resources/PresentMon-LICENSE.txt": "tools/PresentMon-LICENSE.txt"
+      "resources/PresentMon-LICENSE.txt": "tools/PresentMon-LICENSE.txt",
+      "resources/PawnIO_setup.exe": "tools/PawnIO_setup.exe",
+      "resources/PawnIO-LICENSE.txt": "tools/PawnIO-LICENSE.txt"
     },
     "category": "Utility",
     "shortDescription": "Windows PC health, performance and crash diagnostics",

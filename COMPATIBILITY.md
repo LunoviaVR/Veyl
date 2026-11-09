@@ -53,7 +53,7 @@ The overlay is a transparent, click-through, always-on-top window composed by DW
 
 | Limitation | Reason | Workaround |
 |---|---|---|
-| No CPU package/core temperatures | Windows exposes them only to kernel drivers (MSR access); this app installs no driver | CPU package power (RAPL) is shown; ACPI thermal zones where the firmware provides them |
+| No CPU package/core temperatures without PawnIO | Windows exposes them only to kernel drivers (MSR access) | Install PawnIO (below); without it CPU package power (RAPL) and ACPI thermal zones are shown |
 | GPU hotspot / power on GPUs without a vendor library | WDDM does not include them | AMD via ADLX, NVIDIA via NVML (Intel Arc: not implemented) |
 | No motherboard voltages and fans | Super I/O chips need a kernel driver | GPU fans and drive temperatures are shown |
 | SATA SMART attributes | Need ATA pass-through, i.e. elevation plus a device handle with read/write access; not implemented | NVMe drives are fully supported |
@@ -72,10 +72,10 @@ The overlay is a transparent, click-through, always-on-top window composed by DW
 | ASUS firmware ACPI-WMI (`ASUSManagement.asio_hw_fun15` MSR read, `asio_hw_fun21` hardware-monitor read) | Methods exist but return 0 for every MSR and register: ASUS gates them behind Armoury Crate's authentication. Not bypassed. |
 | Intel Innovation Platform Framework | Service present but stopped; desktop boards have no Dynamic Tuning participants. |
 
-Conclusion: without a driver these values are unreachable. They are now read through **PawnIO** (below), an open-source, Microsoft-signed driver the user installs separately.
+Conclusion: without a driver these values are unreachable. They are now read through **PawnIO** (below), an open-source, Microsoft-signed driver that Veyl installs when the user clicks Install PawnIO.
 ## PawnIO sensors (optional, open-source signed driver)
 
-Install PawnIO from https://pawnio.eu (also installed by FanControl / LibreHardwareMonitor). Requires administrator rights (release builds run elevated). The app bundles only the official signed LGPL modules `IntelMSR` and `LpcIO`; it never installs the driver.
+Veyl's installer puts the official signed PawnIO 2.2.0 setup in its `tools` folder; **Install PawnIO** on the Hardware page runs it (`-install -silent`) and reopens the PawnIO providers. PawnIO from https://pawnio.eu, FanControl or LibreHardwareMonitor works the same. Requires administrator rights (release builds run elevated). The app embeds the official signed LGPL modules `IntelMSR` and `LpcIO`.
 
 | Provider | Reads | Verified (i5-13600KF, ROG STRIX Z790-E) |
 |---|---|---|

@@ -1,10 +1,10 @@
-import { ChevronDown, ChevronRight, RefreshCw, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, RefreshCw, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNav } from "../App";
 import { Badge, Button, cn, ErrorNote, Fields, Meter, PageHeader, Panel, SearchInput, StatusNote, Tabs } from "../components/ui";
 import * as f from "../lib/format";
 import { usePref, useQuery } from "../lib/hooks";
-import { api } from "../lib/ipc";
+import { api, errorText } from "../lib/ipc";
 import type { DriveHealth, SensorRow } from "../lib/types";
 
 type Tab = "sensors" | "storage" | "system";
@@ -13,7 +13,17 @@ function SensorsTab() {
   const q = useQuery(() => api.sensors(), [], { intervalMs: 2000 });
   const [search, setSearch] = useState("");
   const [closed, setClosed] = useState<Set<string>>(new Set());
+  const [install, setInstall] = useState<{ kind: "idle" } | { kind: "installing" } | { kind: "failed"; error: string }>({ kind: "idle" });
   const rows = q.data?.rows ?? [];
+  // The install button goes on the first PawnIO provider that reports the driver missing.
+  const pawnioMissing = q.data?.providers.find((p) => p.id.startsWith("pawnio-") && p.status.state === "providerUnavailable")?.id;
+  const runInstall = () => {
+    setInstall({ kind: "installing" });
+    api.installPawnio().then(
+      () => setInstall({ kind: "idle" }),
+      (e) => setInstall({ kind: "failed", error: errorText(e) }),
+    );
+  };
   const groups = useMemo(() => {
     const s = search.toLowerCase();
     const m = new Map<string, SensorRow[]>();
@@ -36,6 +46,15 @@ function SensorsTab() {
             <div className="mt-1">
               <StatusNote status={p.status} always />
             </div>
+            {p.id === pawnioMissing && (
+              <div className="mt-2">
+                <Button variant="primary" disabled={install.kind === "installing"} onClick={runInstall}>
+                  <Download className="size-3.5" /> {install.kind === "installing" ? "Installing…" : "Install PawnIO"}
+                </Button>
+                <p className="mt-1 text-[12px] text-muted">Installs PawnIO 2.2.0, the open-source signed driver that comes with Veyl (pawnio.eu).</p>
+                {install.kind === "failed" && <p className="mt-1 text-[12px] text-bad">{install.error}</p>}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -72,7 +91,7 @@ function SensorsTab() {
         </table>
         {groups.length === 0 && (
           <p className="p-4 text-muted text-[12.5px]">
-            No sensor provider returned readings yet. Built-in providers: ACPI thermal zones, CPU power (Windows Energy Meter / RAPL), AMD GPUs (ADLX) and NVIDIA GPUs (NVML). CPU core temperatures and motherboard fans/voltages are added by the optional PawnIO driver (pawnio.eu) when the app runs as administrator.
+            No sensor provider returned readings yet. Built-in providers: ACPI thermal zones, CPU power (Windows Energy Meter / RAPL), AMD GPUs (ADLX) and NVIDIA GPUs (NVML). CPU core temperatures and motherboard fans/voltages are added by the optional PawnIO driver, which comes with Veyl, when the app runs as administrator.
           </p>
         )}
       </div>

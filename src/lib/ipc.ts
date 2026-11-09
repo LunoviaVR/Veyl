@@ -30,6 +30,7 @@ export const api = {
   resetSensorStats: () => call<void>("reset_sensor_stats"),
   driveHealth: () => call<{ drives: T.DriveHealth[]; updatedMs: number | null }>("get_drive_health"),
   refreshDriveHealth: () => call<void>("refresh_drive_health"),
+  installPawnio: () => call<void>("install_pawnio"),
 
   stabilityEvents: (fromMs: number, toMs: number, limit?: number) => call<T.StabilityEvent[]>("get_stability_events", { fromMs, toMs, limit }),
   eventChannels: () => call<T.ChannelStatus[]>("get_event_channels"),

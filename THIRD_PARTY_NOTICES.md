@@ -16,11 +16,15 @@ b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af). Copyright (C)
 Intel Corporation, MIT License (see `src-tauri/resources/PresentMon-LICENSE.txt`, installed
 next to it in Veyl's `tools` folder).
 
-## PawnIO driver and PawnIOLib (not bundled)
+## PawnIO setup (bundled)
 
-The PawnIO driver (GPL-2.0 with an exception for programs using its device interface)
-and PawnIOLib.dll (LGPL-2.1) are installed separately by the user from https://pawnio.eu
-and loaded at run time from the PawnIO install folder.
+`src-tauri/resources/PawnIO_setup.exe` is the unmodified, signed PawnIO 2.2.0 setup
+(https://github.com/namazso/PawnIO.Setup, SHA-256
+1f519a22e47187f70a1379a48ca604981c4fcf694f4e65b734aaa74a9fba3032), installed in Veyl's `tools`
+folder and run only when the user clicks Install PawnIO. It installs the PawnIO driver (GPL-2.0,
+see `src-tauri/resources/PawnIO-LICENSE.txt`, installed next to it; source code:
+https://github.com/namazso/PawnIO) and PawnIOLib.dll (LGPL-2.1), which Veyl loads at run time
+from the PawnIO install folder.
 
 ## Apple-Style RTSS Overlays (bundled)
 

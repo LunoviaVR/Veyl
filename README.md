@@ -30,8 +30,8 @@ those views side by side and links them:
   it happened.
 - **Real readings only.** If Windows or a driver does not report a value, Veyl shows "—" and
   explains why. It never shows a made-up 0.
-- **Nothing installed behind your back.** Veyl installs no drivers, changes no Windows
-  settings, never clears event logs and never deletes crash dumps.
+- **Nothing installed behind your back.** Veyl installs a driver (PawnIO) only when you click
+  Install, changes no Windows settings, never clears event logs and never deletes crash dumps.
 - **Private by design.** All history stays in a local database. The only network requests are
   the optional update check, optional debug-symbol downloads and add-ons you install with a click.
 - **Light.** About 0.1 % of total CPU while monitoring ([measurements](PERFORMANCE.md)).
@@ -62,8 +62,8 @@ providers:
   chips.
 - **Drives:** NVMe health (SMART), wear and temperature.
 
-CPU and motherboard sensors need the free, signed [PawnIO](https://pawnio.eu) driver, which you
-install yourself.
+CPU and motherboard sensors need the free, signed [PawnIO](https://pawnio.eu) driver. It comes
+with Veyl: click **Install PawnIO** on the Hardware page.
 
 ![Veyl hardware monitor with CPU package and core temperatures, GPU hotspot, fan RPM, voltages and power](docs/screenshots/hardware.png)
 
@@ -182,11 +182,12 @@ you delete it.
 ### Optional add-ons
 
 Without one, its page explains what is missing and everything else keeps working. Intel
-PresentMon, which measures FPS, is not an add-on: it is installed with Veyl.
+PresentMon, which measures FPS, is not an add-on: it is installed with Veyl. The PawnIO setup
+also comes with Veyl, but the driver is installed only when you click **Install PawnIO**.
 
 | Add-on | What it adds | How to get it |
 |---|---|---|
-| [PawnIO](https://pawnio.eu) (open source, Microsoft-signed) | CPU temperatures (Intel); motherboard fans, voltages and temperatures (Nuvoton) | Install PawnIO. Veyl ships only PawnIO's official signed modules, never the driver. |
+| [PawnIO](https://pawnio.eu) (open source, Microsoft-signed) | CPU temperatures (Intel); motherboard fans, voltages and temperatures (Nuvoton) | Click **Install PawnIO** on the Hardware page: Veyl runs the official signed PawnIO 2.2.0 setup that comes with it. Or install it from pawnio.eu. |
 | Debugging Tools for Windows | Blue screen dump analysis (`!analyze -v`) | Click **Install Debugging Tools** on the Blue Screen Analyzer page: Veyl runs Microsoft's winget to add only the debugger feature of the Windows SDK. Or install "Debugging Tools for Windows" from the Windows SDK installer yourself. Veyl finds it automatically. |
 | Microsoft symbol server | Named functions and modules in dump analysis | Off by default. Turn it on in **Settings → Integrations**. Only symbol files are downloaded; dumps never leave your PC. |
 
@@ -200,8 +201,8 @@ PresentMon, which measures FPS, is not an add-on: it is installed with Veyl.
   profile path, computer name, account IDs (SIDs) and drive serial numbers.
 - **Packet captures** stay in memory, are never written to disk, and are cleared when you start a
   new capture or close Veyl.
-- **No drivers installed.** Packet capture uses Windows' built-in capture, and PawnIO is
-  installed by you.
+- **No drivers installed without asking.** Packet capture uses Windows' built-in capture, and
+  PawnIO is installed only when you click **Install PawnIO**.
 - **Administrator rights, safely.** Because Veyl runs as administrator, it only lives in, and
   only starts helper programs from, folders that ordinary programs can't change (Program Files
   and Windows). Critical Windows processes can't be ended from Veyl.
@@ -209,8 +210,8 @@ PresentMon, which measures FPS, is not an add-on: it is installed with Veyl.
 ## FAQ
 
 **How do I check my CPU temperature on Windows 11?**
-Windows does not expose CPU core temperatures to normal apps. Install the free
-[PawnIO](https://pawnio.eu) driver, start Veyl, and open **Hardware**. The CPU package and
+Windows does not expose CPU core temperatures to normal apps. Open **Hardware** in Veyl and
+click **Install PawnIO** to add the free, signed [PawnIO](https://pawnio.eu) driver. The CPU package and
 every core's temperature appear there and on the Overview page. Intel CPUs are supported
 today.
 
@@ -246,8 +247,10 @@ Win+G in the game and tick "Remember this is a game", or click **Capture** next 
 Gaming page.
 
 **Does Veyl install a kernel driver?**
-No. Packet capture uses Windows' built-in capture filter. CPU and motherboard sensors use the
-PawnIO driver only if you installed it yourself.
+Only if you ask it to. Packet capture uses Windows' built-in capture filter. CPU and motherboard
+sensors use the PawnIO driver, which Veyl installs only when you click **Install PawnIO** on the
+Hardware page. Veyl's uninstaller leaves PawnIO in place, because other tools may use it; remove
+it under Installed apps.
 
 **Why does Veyl need administrator rights?**
 Reading kernel crash dumps, capturing frame times and network packets, and showing details of
@@ -263,7 +266,7 @@ No. There is no telemetry and no account, and all data stays on your PC.
 
 | Symptom | Cause and fix |
 |---|---|
-| CPU "Package temp —" | Windows exposes CPU die temperatures only to kernel drivers. Install PawnIO. |
+| CPU "Package temp —" | Windows exposes CPU die temperatures only to kernel drivers. Click **Install PawnIO** on the Hardware page. |
 | GPU hotspot "not reported" | Shown for AMD (ADLX) and NVIDIA (NVML) GPUs when the driver reports it; Windows alone reports only the edge temperature. |
 | GPU power "not reported" | Your driver does not report power to Windows (common on AMD). |
 | Overlay not showing | It appears only while a detected game is the active window, and only over borderless or windowed games. Check that **Overlay** is on at the top of the Gaming page. |

@@ -2,7 +2,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use serde::Serialize;
-use tauri::State;
+use tauri::{Manager, State};
 use veyl_core::{DriveHealth, SensorsView};
 
 use crate::state::AppState;
@@ -37,4 +37,16 @@ pub fn get_drive_health(state: State<'_, AppState>) -> DriveHealthView {
 #[tauri::command]
 pub fn refresh_drive_health(state: State<'_, AppState>) {
     state.refresh_drives.store(true, Ordering::Relaxed);
+}
+
+/// Installs PawnIO with the bundled setup (explicit user action; no input), then reopens its sensors.
+#[tauri::command]
+pub async fn install_pawnio(app: tauri::AppHandle) -> super::CmdResult<()> {
+    tracing::info!("installing PawnIO");
+    let tools = app.state::<AppState>().paths.tools.clone();
+    let result = super::blocking(move || veyl_windows::pawnio::install(&tools)).await?;
+    app.state::<AppState>()
+        .reload_pawnio
+        .store(true, Ordering::Relaxed);
+    result
 }
