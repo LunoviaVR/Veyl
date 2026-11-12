@@ -2,6 +2,14 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.8 (2026-11-12)
+
+### Changed
+
+- **History**: every chart sits in its own framed card with a title bar, so each chart's
+  Latest/Min/Avg/Max table clearly belongs to it. In Cassette Futurism each chart is a numbered
+  channel (CH01, CH02…) on its screen.
+
 ## 1.0.7 (2026-11-12)
 
 ### Added
