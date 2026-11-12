@@ -294,20 +294,22 @@ export default function History() {
               <span className="text-muted">{cat.icon}</span>
               <h2 className="font-semibold text-[13px]">{cat.label}</h2>
             </header>
-            <div className={cn("grid gap-4 p-3", charts.length > 1 && "xl:grid-cols-2")}>
+            <div className={cn("grid gap-3 p-3", charts.length > 1 && "xl:grid-cols-2")}>
               {charts.map((c) => (
-                <div key={c.unit} className="min-w-0">
-                  <h3 className="text-[11.5px] uppercase tracking-wide text-muted font-semibold mb-1">{UNIT_TITLE[c.unit] ?? c.unit}</h3>
-                  <Chart
-                    data={c.merged.data}
-                    gaps={c.merged.gaps}
-                    height={180}
-                    legend={false}
-                    yMax={c.unit === "%" ? 100 : undefined}
-                    series={c.list.map((s, i) => ({ label: metricLabel(s.key, gpuNames), color: (i % 6) + 1, unit: c.unit }))}
-                    themeKey={theme}
-                  />
-                  <StatTable list={c.list} gpuNames={gpuNames} />
+                <div key={c.unit} className="min-w-0 rounded-md border border-line bg-raised/40">
+                  <h3 className="flex items-center px-3 h-8 border-b border-line text-[11.5px] uppercase tracking-wide text-muted font-semibold">{UNIT_TITLE[c.unit] ?? c.unit}</h3>
+                  <div className="p-3">
+                    <Chart
+                      data={c.merged.data}
+                      gaps={c.merged.gaps}
+                      height={180}
+                      legend={false}
+                      yMax={c.unit === "%" ? 100 : undefined}
+                      series={c.list.map((s, i) => ({ label: metricLabel(s.key, gpuNames), color: (i % 6) + 1, unit: c.unit }))}
+                      themeKey={theme}
+                    />
+                    <StatTable list={c.list} gpuNames={gpuNames} />
+                  </div>
                 </div>
               ))}
             </div>

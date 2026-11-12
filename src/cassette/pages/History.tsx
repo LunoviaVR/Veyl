@@ -271,20 +271,25 @@ export default function History() {
               <span className="text-muted">{cat.icon}</span>
               <h2 className="label text-sm">{cat.label}</h2>
             </header>
-            <div className={cn("grid gap-5 p-4", charts.length > 1 && "xl:grid-cols-2")}>
-              {charts.map((c) => (
-                <div key={c.unit} className="min-w-0">
-                  <h3 className="label text-2xs text-muted mb-1.5">{UNIT_TITLE[c.unit] ?? c.unit}</h3>
-                  <Chart
-                    data={c.merged.data}
-                    gaps={c.merged.gaps}
-                    height={180}
-                    legend={false}
-                    yMax={c.unit === "%" ? 100 : undefined}
-                    series={c.list.map((s, i) => ({ label: metricLabel(s.key, gpuNames), color: (i % 6) + 1, unit: c.unit }))}
-                    themeKey={theme}
-                  />
-                  <StatTable list={c.list} gpuNames={gpuNames} />
+            <div className={cn("grid gap-4 p-4", charts.length > 1 && "xl:grid-cols-2")}>
+              {charts.map((c, n) => (
+                <div key={c.unit} className="min-w-0 rounded-[4px] border border-line-strong">
+                  <h3 className="label flex items-center gap-2 px-3 h-8 bg-raised border-b border-line-strong text-2xs text-fg">
+                    <span className="text-faint tabular">CH{String(n + 1).padStart(2, "0")}</span>
+                    {UNIT_TITLE[c.unit] ?? c.unit}
+                  </h3>
+                  <div className="p-3">
+                    <Chart
+                      data={c.merged.data}
+                      gaps={c.merged.gaps}
+                      height={180}
+                      legend={false}
+                      yMax={c.unit === "%" ? 100 : undefined}
+                      series={c.list.map((s, i) => ({ label: metricLabel(s.key, gpuNames), color: (i % 6) + 1, unit: c.unit }))}
+                      themeKey={theme}
+                    />
+                    <StatTable list={c.list} gpuNames={gpuNames} />
+                  </div>
                 </div>
               ))}
             </div>
