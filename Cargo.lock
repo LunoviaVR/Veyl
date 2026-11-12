@@ -4803,7 +4803,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "veyl"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "parking_lot",
  "serde",
@@ -4827,7 +4827,7 @@ dependencies = [
 
 [[package]]
 name = "veyl-core"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "roxmltree",
  "serde",
@@ -4837,7 +4837,7 @@ dependencies = [
 
 [[package]]
 name = "veyl-storage"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "rusqlite",
  "serde",
@@ -4849,7 +4849,7 @@ dependencies = [
 
 [[package]]
 name = "veyl-windows"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "serde",
  "serde_json",
