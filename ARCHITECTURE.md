@@ -16,6 +16,8 @@ crates/
 src-tauri/            app shell    Threads, scheduling, shared state, IPC commands, tray, overlay,
                                    notifications, exports, settings.
 src/                  React UI     Pages, components, typed IPC wrappers, live store.
+  cassette/           theme        The Cassette Futurism interface: its own shell, pages, components
+                                   and styles over the same lib/. Root.tsx mounts it for that theme.
 ```
 
 ### Module map (spec module → location)

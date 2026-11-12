@@ -1,5 +1,6 @@
 // Renders RivaTuner OverlayEditor layouts (.ovl) with Veyl's own readings. The bundled
-// designs come from realHfde/Apple-Style-Inspired-RTSS-Overlay (MIT, see public/overlay-themes).
+// designs come from realHfde/Apple-Style-Inspired-RTSS-Overlay (MIT, see public/overlay-themes),
+// except cassette/console, which is Veyl's own and matches the Cassette Futurism theme.
 // Supported: image crops <I=…>, value-driven frames <AI=…>, graphs <G=…>, <FT>, <TIME=…>,
 // %Source% macros with Format/Formula, text alignment and threshold colours.
 import { DASH } from "../lib/format";
@@ -31,6 +32,7 @@ export const OVERLAY_DESIGNS = [
   { id: "tv/line", label: "TV · Line" },
   { id: "tv/pill", label: "TV · Pill" },
   { id: "tv/side", label: "TV · Side" },
+  { id: "cassette/console", label: "Cassette Futurism" },
 ] as const;
 
 /** A 3×3 grid over the game's window, in reading order. Must match `OVERLAY_POSITIONS` in src-tauri/src/settings.rs. */
@@ -78,6 +80,9 @@ export interface Ovl {
   font: string;
   fontPx: number;
   fontWeight: number;
+  /** Bloom around text, in px, in the text's own colour unless `glowColor` (hex) makes it a halo. Veyl's own keys (`Glow`, `GlowColor` under [Master]); RivaTuner layouts have none. */
+  glow: number;
+  glowColor: string;
   sources: OvlSource[];
   layers: OvlLayer[];
   box: { x: number; y: number; w: number; h: number };
@@ -122,6 +127,8 @@ export function parseOvl(text: string): Ovl {
     font: get("Master", "FontFace") || "Inter",
     fontPx: Math.abs(int("Master", "FontHeight")) || 20,
     fontWeight: int("Master", "FontWeight") || 700,
+    glow: int("Master", "Glow"),
+    glowColor: get("Master", "GlowColor"),
     sources,
     layers,
     box: { x, y, w: Math.max(...sized.map((l) => l.x + l.w)) - x, h: Math.max(...sized.map((l) => l.y + l.h)) - y },

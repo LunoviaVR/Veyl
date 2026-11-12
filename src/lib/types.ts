@@ -312,6 +312,8 @@ export interface DriveHealth {
 }
 
 export type Severity = "info" | "warning" | "error" | "critical";
+/** Colour of a lamp, badge or lit tile. */
+export type Tone = "ok" | "warn" | "bad" | "info";
 export type EventKind =
   | "appCrash"
   | "appHang"
@@ -543,7 +545,8 @@ export interface OverlaySettings {
 }
 
 export interface Settings {
-  theme: "system" | "dark" | "light";
+  /** "cassette" is the Cassette Futurism console; the others are the standard look. */
+  theme: "system" | "dark" | "light" | "cassette";
   sampleIntervalMs: number;
   sensorIntervalMs: number;
   storageHealthIntervalMin: number;

@@ -117,11 +117,15 @@ among thousands of packets. Captured packets stay in memory and are never saved 
 - **In-game FPS overlay.** It appears only while a game is the active window, never over other
   apps. It sits on the game's own window at any of nine spots (corners, edges or centre) and
   follows the window when it moves.
-- **17 overlay designs in four themes.** Sleek Compact, Sleek Rings, Sleek Meters, Sleek Side,
+- **18 overlay designs in four themes.** Sleek Compact, Sleek Rings, Sleek Meters, Sleek Side,
   Performance, and laptop and TV layouts, each in Dark, Smoke, Float or White, from
   [Apple-Style RTSS Overlays](https://github.com/realHfde/Apple-Style-Inspired-RTSS-Overlay) by
-  realHfde (MIT). Pick one on the Gaming page with a live preview. Veyl draws them with its own
-  readings, so RivaTuner and MSI Afterburner aren't needed, and the Inter font they use is bundled.
+  realHfde (MIT), plus Veyl's own Cassette Futurism, a four-line phosphor terminal readout. Pick
+  one on the Gaming page with a live preview. Veyl draws them with its own readings, so RivaTuner
+  and MSI Afterburner aren't needed, and the fonts they use are bundled.
+- **Cassette Futurism theme.** Settings › Theme can swap the whole interface for a retro console
+  with its own layout: CRT screens in green or amber phosphor, keycap buttons, toggle switches,
+  needle dials and a lamp panel, in a dark or putty-coloured chassis.
 - **Nothing injected into the game.** Frame times come from Intel PresentMon, which reads the
   timing events Windows already records. One click on the Gaming page installs it.
 

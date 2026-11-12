@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "uplot/dist/uPlot.min.css";
+/* The Cassette Futurism console; applies only while that theme is on. */
+@import "./cassette/cassette.css";
 
 /* Design tokens. Neutral dark surfaces, one accent, semantic status colours.
    Light theme overrides the same tokens; components only use the tokens.

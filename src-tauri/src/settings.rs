@@ -48,7 +48,7 @@ pub struct OverlaySettings {
 }
 
 /// Bundled overlay designs; must match `OVERLAY_DESIGNS` in src/overlay/ovl.ts.
-pub const OVERLAY_DESIGNS: [&str; 17] = [
+pub const OVERLAY_DESIGNS: [&str; 18] = [
     "essential/sleek-compact",
     "essential/sleek-rings",
     "essential/sleek-meters",
@@ -66,6 +66,7 @@ pub const OVERLAY_DESIGNS: [&str; 17] = [
     "tv/line",
     "tv/pill",
     "tv/side",
+    "cassette/console",
 ];
 /// A 3×3 grid over the game's window; must match `OVERLAY_POSITIONS` in src/overlay/ovl.ts.
 pub const OVERLAY_POSITIONS: [&str; 9] = [
@@ -99,7 +100,7 @@ impl Default for OverlaySettings {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
-    /// system | dark | light
+    /// system | dark | light | cassette (the Cassette Futurism console)
     pub theme: String,
     pub sample_interval_ms: u32,
     pub sensor_interval_ms: u32,
@@ -294,7 +295,7 @@ impl Settings {
         self.retention.minute_days = self.retention.minute_days.clamp(1, 365);
         self.retention.event_days = self.retention.event_days.clamp(7, 3650);
         self.retention.session_days = self.retention.session_days.clamp(1, 3650);
-        if !["system", "dark", "light"].contains(&self.theme.as_str()) {
+        if !["system", "dark", "light", "cassette"].contains(&self.theme.as_str()) {
             self.theme = "system".into();
         }
         self.stutter_factor = if self.stutter_factor.is_finite() {
@@ -400,6 +401,11 @@ mod tests {
         assert_eq!(v.sample_interval_ms, 500);
         assert_eq!(v.sensor_interval_ms, 10_000);
         assert_eq!(v.theme, "system");
+        let cassette = Settings {
+            theme: "cassette".into(),
+            ..Default::default()
+        };
+        assert_eq!(cassette.validated().theme, "cassette");
         assert_eq!(v.stutter_factor, 2.5);
         assert_eq!(v.overlay.opacity, 1.0);
         assert_eq!(v.overlay.design, OVERLAY_DESIGNS[0]);

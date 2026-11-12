@@ -91,7 +91,7 @@ export default function Settings() {
 
         <Panel title="General">
           <Row label="Theme">
-            <Select label="Theme" value={d.theme} onChange={(v) => set({ theme: v })} options={[{ value: "system", label: "Follow Windows" }, { value: "dark", label: "Dark" }, { value: "light", label: "Light" }]} />
+            <Select label="Theme" value={d.theme} onChange={(v) => set({ theme: v })} options={[{ value: "system", label: "Follow Windows" }, { value: "dark", label: "Dark" }, { value: "light", label: "Light" }, { value: "cassette", label: "Cassette Futurism" }]} />
           </Row>
           <Row label="Closing the window" hint="Keep monitoring and alerts running in the notification area.">
             <Switch label="Close to tray" checked={d.closeToTray} onChange={(v) => set({ closeToTray: v })} /> Keep running in the notification area

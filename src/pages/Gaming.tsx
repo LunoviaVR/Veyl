@@ -210,7 +210,7 @@ function OverlayStyle({ overlay, onPick, onPosition }: { overlay: OverlaySetting
         </div>
       </div>
       <p className="text-[11.5px] text-faint mt-2">
-        Designs from Apple-Style RTSS Overlays by realHfde (MIT), set in Inter. Values Veyl cannot read, such as VRAM temperature, show a dash.
+        Designs from Apple-Style RTSS Overlays by realHfde (MIT), set in Inter; Cassette Futurism is Veyl's own. Values Veyl cannot read, such as VRAM temperature, show a dash.
       </p>
     </Panel>
   );

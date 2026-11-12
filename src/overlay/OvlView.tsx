@@ -1,6 +1,7 @@
-// The designs are drawn in Inter Bold (700) and Extra Bold (800); latin covers the degree sign.
+// The designs are drawn in Inter Bold (700) and Extra Bold (800), Cassette Futurism in VT323; latin covers the degree sign.
 import "@fontsource/inter/latin-700.css";
 import "@fontsource/inter/latin-800.css";
+import "@fontsource/vt323/latin-400.css";
 import { useEffect, useState } from "react";
 import { expandText, frameAt, layerColor, layerKind, type Ovl, parseOvl, sourceValues, themeUrl } from "./ovl";
 
@@ -41,6 +42,8 @@ export function OvlView({ ovl, design, theme, values, graphs, now }: { ovl: Ovl;
   const byName = sourceValues(ovl, values);
   const atlas = `url("${themeUrl(design, theme, "atlas.png")}")`;
   const font = `"${ovl.font}", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif`;
+  // A halo is drawn twice, tight and wide, so text stays readable over a bright game.
+  const glow = !ovl.glow ? undefined : ovl.glowColor ? `0 0 2px #${ovl.glowColor}, 0 0 ${ovl.glow}px #${ovl.glowColor}` : `0 0 ${ovl.glow}px currentColor`;
   return (
     <div style={{ position: "relative", width: ovl.box.w, height: ovl.box.h, fontFamily: font, fontWeight: ovl.fontWeight }}>
       {ovl.layers.map((l, i) => {
@@ -62,7 +65,7 @@ export function OvlView({ ovl, design, theme, values, graphs, now }: { ovl: Ovl;
         return (
           <div
             key={i}
-            style={{ ...pos, display: "flex", justifyContent: justify, alignItems: l.h > 0 ? "center" : "flex-start", width: l.w || undefined, height: l.h || undefined, color, fontSize: (ovl.fontPx * l.size) / 100, lineHeight: 1.21, whiteSpace: "nowrap" }}
+            style={{ ...pos, display: "flex", justifyContent: justify, alignItems: l.h > 0 ? "center" : "flex-start", width: l.w || undefined, height: l.h || undefined, color, fontSize: (ovl.fontPx * l.size) / 100, lineHeight: 1.21, whiteSpace: "nowrap", textShadow: glow }}
           >
             {expandText(l.text, byName, values.Frametime ?? null, now)}
           </div>

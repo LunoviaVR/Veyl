@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bitRate, byUnit, bytes, DASH, duration, hex, mhz, pct, rate, relative, temp, timeOnly, whenCompact } from "./format";
+import { bitRate, byUnit, bytes, DASH, duration, hex, mhz, pct, rate, relative, splitUnit, temp, timeOnly, whenCompact } from "./format";
 
 describe("format", () => {
   it("never renders missing values as zero", () => {
@@ -9,6 +9,16 @@ describe("format", () => {
       expect(f(Number.NaN)).toBe(DASH);
     }
     expect(byUnit(null, "°C")).toBe(DASH);
+  });
+
+  it("splits a reading into number and unit, and leaves everything else whole", () => {
+    expect(splitUnit("4.86 GHz")).toEqual(["4.86", "GHz"]);
+    expect(splitUnit("23%")).toEqual(["23", "%"]);
+    expect(splitUnit("0 B/s")).toEqual(["0", "B/s"]);
+    expect(splitUnit("66 °C")).toEqual(["66", "°C"]);
+    expect(splitUnit("14 / 20")).toEqual(["14 / 20", ""]);
+    expect(splitUnit("1,234")).toEqual(["1,234", ""]);
+    expect(splitUnit(DASH)).toEqual([DASH, ""]);
   });
 
   it("formats bytes with binary prefixes", () => {

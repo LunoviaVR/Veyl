@@ -28,6 +28,25 @@ describe("bundled RivaTuner layouts", () => {
     expect(() => parseOvl("<!doctype html><html></html>")).toThrow(); // a missing file served as the app page
   });
 
+  it("parses Cassette Futurism: terminal face, bloom, and every reading it shows exists", () => {
+    for (const t of OVERLAY_THEMES) {
+      const o = load("cassette/console", t.id);
+      expect(o.box).toEqual({ x: 0, y: 0, w: 660, h: 140 });
+      expect([o.font, o.fontPx, o.fontWeight]).toEqual(["VT323", 28, 400]);
+      expect(o.glow).toBeGreaterThan(0);
+      expect(o.glowColor).toBe(t.id === "float" ? "000000" : ""); // no glass behind Float: a dark halo, not bloom
+      // A macro naming a source the layout does not declare would be drawn as literal text:
+      // once the declared ones are taken out, no %name% pair may be left.
+      const known = o.sources.map((s) => s.name).sort((a, b) => b.length - a.length);
+      for (const l of o.layers) expect(known.reduce((text, n) => text.split(`%${n}%`).join(""), l.text), `${t.id}: ${l.text}`).not.toMatch(/%[A-Za-z][^%]*%/);
+    }
+    const bar = layerKind(load("cassette/console", "dark").layers[3]!.text);
+    expect(bar).toMatchObject({ kind: "frames", source: "CPU usage", w: 120, h: 16, count: 21, cols: 7 });
+    if (bar.kind !== "frames") throw new Error("not frames");
+    expect(frameAt(bar, 0)).toEqual({ x: 0, y: 142 }); // nothing lit
+    expect(frameAt(bar, 100)).toEqual({ x: 6 * 120, y: 142 + 2 * 16 }); // frame 20: all twenty segments
+  });
+
   it("picks ring frames across the atlas grid", () => {
     const ring = layerKind("<AI=CPU usage,0,0,0,102,0,95,67,67,51,15,0>");
     if (ring.kind !== "frames") throw new Error("not frames");

@@ -1,0 +1,375 @@
+[Master]
+Implementation=2
+FontFace=VT323
+FontHeight=-28
+FontWeight=400
+ZoomRatio=1
+Glow=6
+[Settings]
+Name=Cassette Futurism
+EnvVars=
+RefreshPeriod=500
+LockUserSettings=1
+EmbeddedImage=atlas.png
+PingAddr=127.0.0.1
+[General]
+Sources=14
+Tables=0
+Layers=28
+[Source0]
+Name=CPU temperature
+Units=°C
+Format=
+Formula=
+Provider=HAL
+ID=CPU temperature
+[Source1]
+Name=CPU usage
+Units=%
+Format=
+Formula=
+Provider=HAL
+ID=CPU usage
+[Source2]
+Name=CPU power
+Units=W
+Format=
+Formula=
+Provider=HAL
+ID=CPU power
+[Source3]
+Name=CPU clock
+Units=GHz
+Format=%.2f
+Formula=x / 1000
+Provider=HAL
+ID=CPU clock
+[Source4]
+Name=GPU1 temperature
+Units=°C
+Format=
+Formula=
+Provider=HAL
+ID=GPU1 temperature
+[Source5]
+Name=GPU1 usage
+Units=%
+Format=
+Formula=
+Provider=HAL
+ID=GPU1 usage
+[Source6]
+Name=GPU1 power
+Units=W
+Format=
+Formula=
+Provider=HAL
+ID=GPU1 power
+[Source7]
+Name=GPU clock
+Units=GHz
+Format=%.2f
+Formula=x / 1000
+Provider=HAL
+ID=GPU1 clock
+[Source8]
+Name=Framerate
+Units=FPS
+Format=
+Formula=
+Provider=MSI Afterburner
+SrcId=00000050
+Gpu=FFFFFFFF
+SrcName=
+[Source9]
+Name=Framerate 1% Low
+Units=FPS
+Format=
+Formula=
+Provider=MSI Afterburner
+SrcId=00000055
+Gpu=FFFFFFFF
+SrcName=
+[Source10]
+Name=Framerate 0.1% Low
+Units=FPS
+Format=
+Formula=
+Provider=MSI Afterburner
+SrcId=00000056
+Gpu=FFFFFFFF
+SrcName=
+[Source11]
+Name=RAM usage
+Units=GB
+Format=%.1f
+Formula=x / 1024
+Provider=HAL
+ID=RAM usage
+[Source12]
+Name=GPU1 memory usage
+Units=GB
+Format=%.1f
+Formula=x / 1024
+Provider=HAL
+ID=GPU1 memory usage
+[Source13]
+Name=GPU1 fan tachometer
+Units=RPM
+Format=
+Formula=
+Provider=HAL
+ID=GPU1 fan tachometer
+[Layer0]
+Name=Panel
+Text=<I=0,0,0,0,660,140>
+PositionX=0
+PositionY=0
+ExtentX=660
+ExtentY=140
+ExtentOrigin=0
+[Layer1]
+Name=CPU label
+Text=CPU
+PositionX=20
+PositionY=12
+ExtentX=46
+ExtentY=28
+ExtentOrigin=0
+TextColor=4FBD6F
+[Layer2]
+Name=CPU usage
+Text=%CPU usage%%
+PositionX=66
+PositionY=12
+ExtentX=50
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94,,75,FFE066,75,90,FF6B5E,90,(CPU usage,1)
+[Layer3]
+Name=CPU bar
+Text=<AI=CPU usage,0,0,0,105,0,142,120,16,21,7,0>
+PositionX=128
+PositionY=18
+ExtentX=120
+ExtentY=16
+ExtentOrigin=0
+[Layer4]
+Name=CPU temperature
+Text=%CPU temperature%°C
+PositionX=258
+PositionY=12
+ExtentX=64
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94,,75,FFE066,75,85,FF6B5E,85,(CPU temperature,1)
+[Layer5]
+Name=CPU clock
+Text=%CPU clock% GHz
+PositionX=330
+PositionY=12
+ExtentX=96
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer6]
+Name=CPU power
+Text=%CPU power% W
+PositionX=434
+PositionY=12
+ExtentX=62
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer7]
+Name=GPU label
+Text=GPU
+PositionX=20
+PositionY=40
+ExtentX=46
+ExtentY=28
+ExtentOrigin=0
+TextColor=4FBD6F
+[Layer8]
+Name=GPU usage
+Text=%GPU1 usage%%
+PositionX=66
+PositionY=40
+ExtentX=50
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94,,75,FFE066,75,90,FF6B5E,90,(GPU1 usage,1)
+[Layer9]
+Name=GPU bar
+Text=<AI=GPU1 usage,0,0,0,105,0,142,120,16,21,7,0>
+PositionX=128
+PositionY=46
+ExtentX=120
+ExtentY=16
+ExtentOrigin=0
+[Layer10]
+Name=GPU temperature
+Text=%GPU1 temperature%°C
+PositionX=258
+PositionY=40
+ExtentX=64
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94,,75,FFE066,75,85,FF6B5E,85,(GPU1 temperature,1)
+[Layer11]
+Name=GPU clock
+Text=%GPU clock% GHz
+PositionX=330
+PositionY=40
+ExtentX=96
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer12]
+Name=GPU power
+Text=%GPU1 power% W
+PositionX=434
+PositionY=40
+ExtentX=62
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer13]
+Name=RAM label
+Text=RAM
+PositionX=20
+PositionY=68
+ExtentX=46
+ExtentY=28
+ExtentOrigin=0
+TextColor=4FBD6F
+[Layer14]
+Name=RAM
+Text=%RAM usage% GB
+PositionX=66
+PositionY=68
+ExtentX=96
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer15]
+Name=VRAM label
+Text=VRAM
+PositionX=186
+PositionY=68
+ExtentX=50
+ExtentY=28
+ExtentOrigin=0
+TextColor=4FBD6F
+[Layer16]
+Name=VRAM
+Text=%GPU1 memory usage% GB
+PositionX=236
+PositionY=68
+ExtentX=96
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer17]
+Name=Fan label
+Text=FAN
+PositionX=350
+PositionY=68
+ExtentX=40
+ExtentY=28
+ExtentOrigin=0
+TextColor=4FBD6F
+[Layer18]
+Name=Fan
+Text=%GPU1 fan tachometer% RPM
+PositionX=390
+PositionY=68
+ExtentX=106
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer19]
+Name=Frametime label
+Text=FT
+PositionX=20
+PositionY=96
+ExtentX=46
+ExtentY=28
+ExtentOrigin=0
+TextColor=4FBD6F
+[Layer20]
+Name=Frametime
+Text=<FT> ms
+PositionX=66
+PositionY=96
+ExtentX=96
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer21]
+Name=Frametime graph
+Text=<G=Frametime,0,0,1,0,40,10>
+PositionX=186
+PositionY=100
+ExtentX=310
+ExtentY=20
+ExtentOrigin=0
+TextColor=6DFA94
+[Layer22]
+Name=FPS label
+Text=FPS
+PositionX=520
+PositionY=12
+ExtentX=40
+ExtentY=28
+ExtentOrigin=0
+Size=80
+TextColor=4FBD6F
+[Layer23]
+Name=FPS
+Text=%Framerate%
+PositionX=520
+PositionY=8
+ExtentX=120
+ExtentY=58
+ExtentOrigin=2
+Size=200
+TextColor=D2FFDD
+[Layer24]
+Name=1% low label
+Text=1% LOW
+PositionX=520
+PositionY=68
+ExtentX=70
+ExtentY=28
+ExtentOrigin=0
+Size=85
+TextColor=4FBD6F
+[Layer25]
+Name=1% low
+Text=%Framerate 1% Low%
+PositionX=590
+PositionY=68
+ExtentX=50
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94
+[Layer26]
+Name=0.1% low label
+Text=0.1% LOW
+PositionX=520
+PositionY=96
+ExtentX=80
+ExtentY=28
+ExtentOrigin=0
+Size=85
+TextColor=4FBD6F
+[Layer27]
+Name=0.1% low
+Text=%Framerate 0.1% Low%
+PositionX=596
+PositionY=96
+ExtentX=44
+ExtentY=28
+ExtentOrigin=2
+TextColor=6DFA94

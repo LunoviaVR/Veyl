@@ -33,12 +33,21 @@ from the PawnIO install folder.
 https://github.com/realHfde/Apple-Style-Inspired-RTSS-Overlay, unmodified apart from the file
 names. Copyright (c) 2026 Faisal, MIT License (see `public/overlay-themes/LICENSE`). Veyl draws
 them with its own renderer and readings; RivaTuner Statistics Server is not used.
+`public/overlay-themes/cassette/` is not part of that work: it is Veyl's own Cassette Futurism
+design, in the same file format.
 
 ## Inter font (bundled)
 
 The overlay designs are set in Inter by Rasmus Andersson (https://rsms.me/inter/), bundled from
 the `@fontsource/inter` package (Latin, weights 700 and 800) under the SIL Open Font License 1.1
 (`node_modules/@fontsource/inter/LICENSE`).
+
+## VT323 font (bundled)
+
+The Cassette Futurism theme sets its large readouts, and the overlay design of the same name all
+its text, in VT323 by The VT323 Project Authors (Peter Hull), bundled from the
+`@fontsource/vt323` package (Latin, weight 400) under the SIL Open Font License 1.1
+(`node_modules/@fontsource/vt323/LICENSE`).
 
 ## Intel PresentMon (downloaded on request, not bundled)
 

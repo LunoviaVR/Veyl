@@ -89,6 +89,8 @@ export function useNav(): Nav {
 }
 
 function applyTheme(theme: Settings["theme"] | undefined) {
+  // Cassette Futurism is a separate interface (Root.tsx swaps to it) with its own light and dark.
+  if (theme === "cassette") return;
   const dark = theme === "dark" || ((theme ?? "system") === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
   // Native title bar follows the app theme; null = follow Windows.

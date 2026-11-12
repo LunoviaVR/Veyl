@@ -2,6 +2,24 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- **Cassette Futurism** theme (Settings › Theme). It replaces the whole interface with a retro
+  console and leaves the standard themes as they were:
+  - data on CRT screens in green or amber phosphor, keycap buttons, toggle switches, larger text;
+    two switches in the sidebar choose the phosphor and a dark or putty-coloured chassis;
+  - an Overview with a lamp panel (a tile stays dark while its subsystem is normal and lights
+    amber or red for an active alert, a reached limit or a recorded incident), messages that link
+    to the evidence, needle dials for CPU, GPU and memory, and a tape recorder for history;
+  - a sidebar grouped into Monitor, Diagnose and Tools, and **Ctrl+K** to jump to any page or tab
+    by name or by what it does, such as "temperature" or "fps";
+  - apps and background processes on separate screens, each with its own filter and sort order.
+- **Cassette Futurism** overlay design, available with any theme: a four-line phosphor terminal
+  readout with LED bars. Dark and Smoke are green, White is amber in a putty case, Float has no
+  case.
+
 ## 1.0.5 (2026-11-09)
 
 ### Added

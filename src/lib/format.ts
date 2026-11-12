@@ -110,6 +110,12 @@ export function hex(v: Num, width = 8): string {
   return isNum(v) ? `0x${v.toString(16).toUpperCase().padStart(width, "0")}` : DASH;
 }
 
+/** "4.86 GHz" → ["4.86", "GHz"], so a readout can set the unit smaller. Anything that is not number + unit comes back whole. */
+export function splitUnit(text: string): [string, string] {
+  const m = /^(-?[\d.,]+)\s?([^\d\s][^\d]*)$/.exec(text);
+  return m ? [m[1]!, m[2]!] : [text, ""];
+}
+
 /** Formats a value by its canonical unit symbol (as used by sensors and history). */
 export function byUnit(v: Num, unit: string): string {
   switch (unit) {
