@@ -343,7 +343,7 @@ mod tests {
         assert!(m("ip.src != 1.1.1.1", &https));
         assert!(!m("tcp.port != 443", &https), "no value may equal for !=");
         assert!(!m("dns.qry.name != x", &https), "!= needs the field");
-        assert!(m("eth.src == cc-28-aa-44-0e-f3", &https));
+        assert!(m("eth.src == 02-1a-2b-3c-4d-5e", &https));
         assert!(m("frame.len >= 54 and frame.len < 0x100", &https));
     }
 

@@ -1730,7 +1730,7 @@ pub(crate) mod tests {
 
     pub fn eth(ty: u16, payload: &[u8]) -> Vec<u8> {
         let mut v = vec![
-            0x4c, 0x43, 0x41, 0xe5, 0xa6, 0x5d, 0xcc, 0x28, 0xaa, 0x44, 0x0e, 0xf3,
+            0x02, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0x02, 0x1a, 0x2b, 0x3c, 0x4d, 0x5e,
         ];
         v.extend_from_slice(&ty.to_be_bytes());
         v.extend_from_slice(payload);
@@ -1778,7 +1778,7 @@ pub(crate) mod tests {
     /// The first frame the capture test recorded on this PC (TCP ACK to port 443).
     #[test]
     fn real_captured_ack() {
-        let hex = "4c4341e5a65dcc28aa440ef3080045000028a974400080060000c0a801a9a04f680ae0d401bb9e8d1c2a0000000050104000ee7d0000";
+        let hex = "02aabbccddee021a2b3c4d5e080045000028a974400080060000c0a801a9a04f680ae0d401bb9e8d1c2a0000000050104000ee7d0000";
         let bytes: Vec<u8> = (0..hex.len())
             .step_by(2)
             .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("test value"))
@@ -1890,7 +1890,7 @@ pub(crate) mod tests {
     #[test]
     fn arp_icmp_rst_and_ipv6() {
         let mut a = vec![
-            0, 1, 8, 0, 6, 4, 0, 1, 0xcc, 0x28, 0xaa, 0x44, 0x0e, 0xf3, 192, 168, 1, 169,
+            0, 1, 8, 0, 6, 4, 0, 1, 0x02, 0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 192, 168, 1, 169,
         ];
         a.extend_from_slice(&[0, 0, 0, 0, 0, 0, 192, 168, 1, 1]);
         assert_eq!(

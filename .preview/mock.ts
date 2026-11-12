@@ -118,7 +118,7 @@ function frame(at = Date.now()): T.TelemetryFrame {
 // ---- static fixtures ------------------------------------------------------
 
 const systemInfo: T.SystemInfo = {
-  computerName: "GAMINGPC",
+  computerName: "SAMPLE-PC",
   osName: "Windows 11 Home 26H2",
   osBuild: "26300.9711",
   bootTimeMs: BOOT,
