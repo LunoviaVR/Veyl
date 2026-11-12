@@ -2,7 +2,7 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 1.0.6 (2026-11-11)
 
 ### Added
 
