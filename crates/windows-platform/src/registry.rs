@@ -1,4 +1,4 @@
-//! Read-only registry helpers. Nothing in this application writes the registry.
+//! Read-only registry helpers. The only registry write in Veyl is the one-boot Safe Mode exit in `recovery.rs`.
 
 use windows::Win32::Foundation::{ERROR_MORE_DATA, ERROR_NO_MORE_ITEMS, ERROR_SUCCESS};
 use windows::Win32::System::Registry::{
