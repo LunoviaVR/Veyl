@@ -83,6 +83,8 @@ from this table. Add a fixture-based test with real event XML (`wevtutil qe Syst
    telemetry with `useLive(selector)`.
 3. Register the page in `GROUPS` and `pages` in `src/App.tsx`.
 4. Render `null` values with the formatters in `src/lib/format.ts` (they show "—").
+5. The Cassette Futurism theme is a separate interface: add the page to `src/cassette/pages`
+   too, with the primitives in `src/cassette/components`, and register it in `src/cassette/App.tsx`.
 
 ## Adding a command
 
