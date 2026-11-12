@@ -12,6 +12,7 @@ import {
   Gauge,
   History as HistoryIcon,
   LayoutDashboard,
+  LifeBuoy,
   ListTree,
   Network as NetworkIcon,
   Settings as SettingsIcon,
@@ -35,11 +36,12 @@ import HistoryPage from "./pages/History";
 import Overview from "./pages/Overview";
 import Performance from "./pages/Performance";
 import Processes from "./pages/Processes";
+import Recovery from "./pages/Recovery";
 import SettingsPage from "./pages/Settings";
 import Specs from "./pages/Specs";
 import Stability from "./pages/Stability";
 
-export type PageId = "overview" | "processes" | "performance" | "hardware" | "gaming" | "stability" | "crashes" | "bsod" | "network" | "history" | "specs" | "alerts" | "settings";
+export type PageId = "overview" | "processes" | "performance" | "hardware" | "gaming" | "stability" | "crashes" | "bsod" | "network" | "history" | "specs" | "recovery" | "alerts" | "settings";
 
 interface NavItem {
   id: PageId;
@@ -67,6 +69,7 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
       { id: "network", label: "Network", icon: NetworkIcon },
       { id: "history", label: "History", icon: HistoryIcon },
       { id: "specs", label: "PC Specs", icon: ClipboardList },
+      { id: "recovery", label: "Recovery", icon: LifeBuoy },
       { id: "alerts", label: "Alerts", icon: Bell },
     ],
   },
@@ -168,6 +171,7 @@ export default function App() {
     network: <NetworkPage />,
     history: <HistoryPage />,
     specs: <Specs />,
+    recovery: <Recovery />,
     alerts: <Alerts />,
     settings: <SettingsPage />,
   };

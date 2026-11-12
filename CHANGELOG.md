@@ -2,6 +2,14 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- **Recovery** page (Tools in Cassette Futurism, Diagnose in the standard themes): restart straight
+  into Safe Mode, Safe Mode with Networking or the Windows recovery options. Safe Mode lasts one
+  boot; a restart that was cancelled can be undone from the page. Safe Mode needs administrator rights.
+
 ## 1.0.6 (2026-11-11)
 
 ### Added

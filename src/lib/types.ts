@@ -682,6 +682,14 @@ export interface RuntimeStatus {
   startedMs: number;
 }
 
+export interface BootStatus {
+  mode: "normal" | "safeMode" | "safeModeNetworking";
+  safeModePending: boolean;
+  elevated: boolean;
+}
+
+export type RestartTarget = "safeMode" | "safeModeNetworking" | "recovery" | "normal";
+
 export interface TreeResult {
   ended: number[];
   failed: [number, string, string][];

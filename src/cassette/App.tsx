@@ -13,6 +13,7 @@ import {
   Gamepad2,
   History as HistoryIcon,
   LayoutDashboard,
+  LifeBuoy,
   ListTree,
   Network as NetworkIcon,
   Settings as SettingsIcon,
@@ -37,6 +38,7 @@ import HistoryPage from "./pages/History";
 import Overview from "./pages/Overview";
 import Performance from "./pages/Performance";
 import Processes from "./pages/Processes";
+import Recovery from "./pages/Recovery";
 import SettingsPage from "./pages/Settings";
 import Specs from "./pages/Specs";
 import Stability from "./pages/Stability";
@@ -74,6 +76,7 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
       { id: "history", label: "History", icon: HistoryIcon },
       { id: "network", label: "Packet Capture", icon: NetworkIcon },
       { id: "specs", label: "PC Specs", icon: ClipboardList },
+      { id: "recovery", label: "Recovery", icon: LifeBuoy },
     ],
   },
 ];
@@ -100,6 +103,7 @@ const JUMPS: { label: string; page: PageId; params?: Record<string, string>; wor
   { label: "History", page: "history", words: "recorded telemetry charts tape export csv" },
   { label: "Packet Capture", page: "network", words: "network packets wireshark dns tls filter sniff" },
   { label: "PC Specs", page: "specs", words: "hardware list motherboard export" },
+  { label: "Recovery", page: "recovery", words: "safe mode boot restart recovery environment winre startup settings repair system restore" },
   { label: "Settings", page: "settings", words: "theme sampling retention updates privacy tray administrator" },
 ];
 
@@ -284,6 +288,7 @@ export default function App() {
     network: <NetworkPage />,
     history: <HistoryPage />,
     specs: <Specs />,
+    recovery: <Recovery />,
     alerts: <Alerts />,
     settings: <SettingsPage />,
   };

@@ -630,8 +630,19 @@ const specs: T.SpecSection[] = [
 type Args = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 const later = <R>(value: R, ms: number) => new Promise<R>((resolve) => setTimeout(() => resolve(value), ms));
 
+// Restarting is simulated as a restart the user cancelled, so the Recovery page shows its pending state.
+let safeModePending = false;
+
 const handlers: Record<string, (a: Args) => unknown> = {
   get_system_info: () => systemInfo,
+  get_boot_status: (): T.BootStatus => ({ mode: "normal", safeModePending, elevated: runtimeStatus.elevated }),
+  restart_into: (a) => {
+    if (String(a.target).startsWith("safeMode")) safeModePending = true;
+    return later(undefined, 600);
+  },
+  cancel_safe_mode: () => {
+    safeModePending = false;
+  },
   get_latest: () => (empty ? null : frame()),
   get_runtime_status: () => runtimeStatus,
   get_update_status: () => updateStatus,

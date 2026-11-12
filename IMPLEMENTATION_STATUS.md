@@ -65,6 +65,7 @@ Verification machine: Windows 11 Home 26300, i5-13600KF, Radeon RX 9060 XT, 4 NV
 | Alerts: thresholds with duration/hysteresis/cooldown, event alerts, notifications, clear active list (history kept) | Done | |
 | History: 5 s + 1 min tiers, retention, category cards, select-all, shaded no-data periods, custom ranges, CSV | Done | |
 | PC Specs: SMBIOS board/BIOS/RAM modules, CPU caches, GPU driver, displays, drives, network; TXT and CSV export (no serials) | Done | Verified on this PC, TXT export clicked through |
+| Recovery: restart into Safe Mode (one boot, bcdedit + `*` RunOnce exit), Safe Mode with Networking, recovery options (`shutdown /r /o`); cancel a pending Safe Mode | Done | Built, unit test for the boot probes; UI checked in the preview. Not restarted on a real PC |
 | Network: live packet capture (Windows NDIS capture over ETW, needs admin), dissectors (Ethernet, ARP, IPv4/6, TCP, UDP, ICMP, DNS/mDNS/LLMNR, HTTP/1.x, TLS SNI, SMB2, QUIC, DHCP), display filters, hex view; memory only | Done | Verified on this PC: capture, filters, presets, field filter, hex highlight, stop/clear, external stop; 1.5M random frames fuzzed |
 | Exports: history/session/events CSV, JSON report, redaction | Done | |
 

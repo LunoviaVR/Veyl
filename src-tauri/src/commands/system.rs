@@ -6,7 +6,7 @@ use tauri_plugin_opener::OpenerExt;
 use veyl_core::specs::{parse_smbios, sections, SpecSection, SpecsInput};
 use veyl_core::{SystemInfo, TelemetryFrame};
 use veyl_storage::DbStats;
-use veyl_windows::{cpu, display, gpu, system_info};
+use veyl_windows::{cpu, display, gpu, recovery, system_info};
 
 use super::CmdResult;
 use crate::state::{AppState, ChannelStatus};
@@ -97,6 +97,58 @@ pub fn restart_as_admin(app: AppHandle) -> CmdResult<()> {
     app.exit(0);
     Ok(())
 }
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BootStatus {
+    /// "normal", "safeMode" or "safeModeNetworking".
+    pub mode: &'static str,
+    /// Veyl set the next boot to Safe Mode and Windows has not restarted yet.
+    pub safe_mode_pending: bool,
+    pub elevated: bool,
+}
+
+#[tauri::command(async)]
+pub fn get_boot_status(state: State<'_, AppState>) -> BootStatus {
+    BootStatus {
+        mode: match recovery::boot_mode() {
+            recovery::BootMode::Normal => "normal",
+            recovery::BootMode::SafeMode => "safeMode",
+            recovery::BootMode::SafeModeNetworking => "safeModeNetworking",
+        },
+        safe_mode_pending: recovery::safe_mode_pending(),
+        elevated: state.system_info.read().elevated,
+    }
+}
+
+/// Restarts Windows into Safe Mode, the recovery menu or normal mode (explicit, confirmed user action).
+#[tauri::command(async)]
+pub fn restart_into(state: State<'_, AppState>, target: String) -> CmdResult<()> {
+    let target = match target.as_str() {
+        "safeMode" => recovery::Target::SafeMode,
+        "safeModeNetworking" => recovery::Target::SafeModeNetworking,
+        "recovery" => recovery::Target::Recovery,
+        "normal" => recovery::Target::Normal,
+        _ => return Err("Unknown restart target".into()),
+    };
+    // The recovery menu needs no boot entry change, so it is left to Windows to allow or refuse.
+    if target != recovery::Target::Recovery && !state.system_info.read().elevated {
+        return Err(ADMIN_NEEDED.into());
+    }
+    recovery::restart_into(target)
+}
+
+/// Clears a Safe Mode boot that Veyl set and Windows has not started yet.
+#[tauri::command(async)]
+pub fn cancel_safe_mode(state: State<'_, AppState>) -> CmdResult<()> {
+    if !state.system_info.read().elevated {
+        return Err(ADMIN_NEEDED.into());
+    }
+    recovery::cancel_safe_mode()
+}
+
+const ADMIN_NEEDED: &str =
+    "Changing how Windows starts needs administrator rights: restart Veyl as administrator first.";
 
 /// Opens one of the application's own folders in Explorer.
 #[tauri::command]

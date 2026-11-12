@@ -33,6 +33,7 @@ pub mod pdh;
 pub mod presentmon;
 pub mod process_control;
 pub mod processes;
+pub mod recovery;
 pub mod registry;
 pub mod services;
 pub mod startup;
