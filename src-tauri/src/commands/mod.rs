@@ -44,4 +44,35 @@ mod tests {
         assert!(super::check_range(-1, 5).is_err());
         assert!(super::check_range(0, super::MAX_RANGE_MS + 1).is_err());
     }
+
+    /// A registered command missing from the ACL manifest or the main capability is rejected at runtime.
+    #[test]
+    fn every_command_is_in_the_acl() {
+        let lib = include_str!("../lib.rs");
+        let handler = lib
+            .split("generate_handler![")
+            .nth(1)
+            .and_then(|rest| rest.split(']').next())
+            .expect("generate_handler! not found in lib.rs");
+        let build = include_str!("../../build.rs");
+        let main = include_str!("../../capabilities/main.json");
+        let mut n = 0;
+        for cmd in handler
+            .split(',')
+            .filter_map(|p| p.trim().rsplit("::").next())
+            .filter(|c| !c.is_empty())
+        {
+            assert!(
+                build.contains(&format!("\"{cmd}\"")),
+                "{cmd} missing from build.rs COMMANDS"
+            );
+            let perm = format!("\"allow-{}\"", cmd.replace('_', "-"));
+            assert!(
+                main.contains(&perm),
+                "{perm} missing from capabilities/main.json"
+            );
+            n += 1;
+        }
+        assert!(n > 60, "parsed only {n} commands from generate_handler!");
+    }
 }

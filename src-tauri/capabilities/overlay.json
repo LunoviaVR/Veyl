@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "overlay",
+  "description": "In-game overlay: reads settings and listens for live readings, nothing else.",
+  "windows": ["overlay"],
+  "permissions": ["core:event:default", "allow-get-settings"]
+}
