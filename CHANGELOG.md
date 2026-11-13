@@ -2,6 +2,14 @@
 
 All notable changes to Veyl. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.9 (2026-11-12)
+
+### Fixed
+
+- **Security**: the in-game overlay window can only read settings and receive live readings.
+  Before, it could call every Veyl command, such as ending processes or restarting into
+  recovery, with the same rights as the main window.
+
 ## 1.0.8 (2026-11-12)
 
 ### Changed
